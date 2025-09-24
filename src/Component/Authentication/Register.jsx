@@ -24,6 +24,8 @@ const Register = () => {
                     username: data.name,
                     email: data.email,
                     role: 'user',
+                    subscription: 'free',
+                    Badge: 'Bronze',
                     created_at: new Date().toISOString(),
                     last_log_in: new Date().toISOString(),
                 };

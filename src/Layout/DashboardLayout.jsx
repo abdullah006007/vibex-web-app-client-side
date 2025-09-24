@@ -10,6 +10,7 @@ const DashboardLayout = () => {
 
   const { user } = useAuth()
   const { role, roleLoading } = useRole()
+console.log(role);
 
 
 

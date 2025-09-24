@@ -23,13 +23,17 @@ const SocialLogin = () => {
                 const user = result.user;
 
                 const userInfo = {
+                    name : user.displayName,
                     email: user.email,
                     username: user.displayName ,
+                    subscription: 'free',
+                    Badge: 'Bronze',
                     role: 'user', //default role
                     created_at: new Date().toISOString(),
                     last_log_in: new Date().toISOString()
 
                 }
+                console.log(user.displayName);
                 const res = await axiosInstance.post('/users', userInfo)
                 console.log( 'user update info', res.data);
 

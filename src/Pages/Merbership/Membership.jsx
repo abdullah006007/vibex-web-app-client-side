@@ -68,20 +68,21 @@ const CheckoutForm = ({ price, onSuccess }) => {
       }
 
       if (result.paymentIntent.status === 'succeeded') {
-        // Payment successful, notify backend
+        // Payment successful, notify backend to upgrade subscription
         const upgradeResponse = await axiosSecure.post('/user/membership/upgrade', {
           paymentIntentId: result.paymentIntent.id,
+          subscription: 'premium', // Updated to set subscription to premium
         });
         console.log('Upgrade Response:', upgradeResponse.data); // Debug upgrade response
         onSuccess();
-        alert('Payment successful! You are now a Gold member.');
+        alert('Payment successful! You are now a Premium member with a Gold badge.');
       }
     } catch (err) {
       console.error('Payment error:', err);
       setError(
         err.response?.data?.error ||
-          err.message ||
-          'Failed to process payment. Please check your card details or try again later.'
+        err.message ||
+        'Failed to process payment. Please check your card details or try again later.'
       );
     } finally {
       setProcessing(false);
@@ -147,14 +148,12 @@ const Membership = () => {
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
 
-
-
-  // Fetch user membership status
+  // Fetch user subscription status
   const { data: userData, isLoading: userLoading } = useQuery({
-    queryKey: ['userMembership', user?.email],
+    queryKey: ['userSubscription', user?.email],
     queryFn: async () => {
       if (!user) return null;
-      const response = await axiosSecure.get(`/users/role/${user.email}`);
+      const response = await axiosSecure.get(`/users/subscription/${user.email}`);
       return response.data;
     },
     enabled: !!user && !authLoading,
@@ -185,13 +184,11 @@ const Membership = () => {
     );
   }
 
- 
-
   const price = 10; // Example: $10 for membership (adjust to BDT if needed)
 
   const handlePaymentSuccess = () => {
-    queryClient.invalidateQueries(['userMembership', user.email]);
-    navigate('/dashboard/home'); // Redirect to DashHome after successful payment
+    queryClient.invalidateQueries(['userSubscription', user.email]);
+    navigate('/dashboard/home', { state: { fromMembership: true } });
   };
 
   return (
@@ -199,14 +196,14 @@ const Membership = () => {
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full transform hover:scale-105 transition-transform duration-500">
         <div className="text-center mb-8">
           <FaCrown className="text-yellow-400 text-5xl mx-auto mb-4 animate-bounce" />
-          <h1 className="text-4xl font-extrabold text-gray-800">Unlock Gold Membership</h1>
-          <p className="text-gray-500 mt-2">Elevate your experience with premium features!</p>
+          <h1 className="text-4xl font-extrabold text-gray-800">Unlock Premium Membership</h1>
+          <p className="text-gray-500 mt-2">Elevate your experience with a Gold badge and premium features!</p>
         </div>
-        {userData?.role === 'gold' ? (
+        {userData?.subscription === 'premium' ? (
           <div className="text-center bg-green-100 p-6 rounded-lg shadow-inner">
             <FaCheckCircle className="text-green-500 text-6xl mx-auto mb-4" />
             <p className="text-green-600 text-2xl font-bold mb-4">
-              You're a Gold Member! ✨
+              You're a Premium Member with a Gold Badge! ✨
             </p>
             <p className="text-gray-600">
               Enjoy unlimited posts, your exclusive Gold badge, and more. Thank you for your support!
@@ -223,12 +220,12 @@ const Membership = () => {
             <div className="bg-blue-50 p-4 rounded-lg mb-6 shadow-inner">
               <p className="text-gray-700 font-semibold flex items-center justify-center">
                 <FaCheckCircle className="mr-2 text-blue-500" /> Current Posts: {postCount || 0}/5
-                <span className="text-gray-500 ml-2">(Upgrade for unlimited!)</span>
+                <span className="text-gray-500 ml-2">(Upgrade to Premium for unlimited!)</span>
               </p>
             </div>
             <div className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-                <FaCrown className="mr-2 text-yellow-400" /> Exclusive Benefits
+                <FaCrown className="mr-2 text-yellow-400" /> Exclusive Premium Benefits
               </h2>
               <ul className="space-y-3 text-gray-600">
                 <li className="flex items-center">

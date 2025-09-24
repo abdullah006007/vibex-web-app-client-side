@@ -1,0 +1,119 @@
+
+<div class="order-timeline my-8">
+
+  <div class="timeline-step">
+    <div class="timeline-icon">
+      <!-- Cart Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.2 6h12.4M7 13h10m-6 9a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z"/>
+      </svg>
+    </div>
+    <p class="timeline-date">Sep 24th</p>
+    <p class="timeline-label">Ordered</p>
+  </div>
+
+
+  <div class="timeline-step">
+    <div class="timeline-icon">
+      <!-- Truck Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V5a2 2 0 012-2h5l5 5v9a2 2 0 01-2 2h-1m-4 0a2 2 0 11-4 0 2 2 0 014 0zm-6 0a2 2 0 11-4 0 2 2 0 014 0z"/>
+      </svg>
+    </div>
+    <p class="timeline-date">Sep 25th - Sep 26th</p>
+    <p class="timeline-label">Order Ready</p>
+  </div>
+
+
+  <div class="timeline-step">
+    <div class="timeline-icon">
+      <!-- Gift Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4m16 0v7a2 2 0 01-2 2H6a2 2 0 01-2-2v-7m16 0V9a2 2 0 00-2-2h-3.5a2 2 0 010-4A2.5 2.5 0 0120 5v4m-8 3v10m0-10V5m0 7H4"/>
+      </svg>
+    </div>
+    <p class="timeline-date">Oct 4th - Oct 6th</p>
+    <p class="timeline-label">Delivered</p>
+  </div>
+</div>
+
+<style>
+.order-timeline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+  text-align: center;
+  margin: 40px 0;
+}
+
+/* Horizontal line only between icons */
+.order-timeline::before {
+  content: "";
+  position: absolute;
+  top: 30px; /* middle of icons */
+  left: 12%; /* start inside first icon */
+  right: 12%; /* end inside last icon */
+  height: 2px;
+  background: #000;
+  z-index: 1;
+}
+
+.timeline-step {
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: #000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 3;
+}
+
+.timeline-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.timeline-date {
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+.timeline-label {
+  font-size: 13px;
+  color: #555;
+}
+
+@media (max-width: 768px) {
+  .timeline-icon {
+    width: 50px;
+    height: 50px;
+  }
+  .timeline-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .timeline-date {
+    font-size: 13px;
+  }
+  .timeline-label {
+    font-size: 12px;
+  }
+  .order-timeline::before {
+    left: 14%; 
+    right: 14%;
+  }
+}
+</style>

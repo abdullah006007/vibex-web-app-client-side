@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import useAuth from '../../Hooks/useAuth';
 import useAxiosSecure from '../../Hooks/useAxiosSecure';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FaCrown, FaCheckCircle } from 'react-icons/fa';
 
 const DashHome = () => {
@@ -10,15 +10,17 @@ const DashHome = () => {
   const { displayName, email, photoURL, uid } = user || {};
   const axiosSecure = useAxiosSecure();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState(null);
 
   // Fetch user membership status
   const { data: userData, isLoading: userLoading } = useQuery({
-    queryKey: ['userMembership', email],
+    queryKey: ['userSubscription', email],
     queryFn: async () => {
       if (!email) return null;
       const response = await axiosSecure.get(`/users/role/${email}`);
+      console.log('User subscription data:', response.data); // Debug API response
       return response.data;
     },
     enabled: !!email && !authLoading,
@@ -30,6 +32,7 @@ const DashHome = () => {
     queryFn: async () => {
       if (!uid) return 0;
       const response = await axiosSecure.get(`/user/post/count/${uid}`);
+      console.log('Post count:', response.data.count); // Debug post count
       return response.data.count;
     },
     enabled: !!uid && !authLoading,
@@ -41,10 +44,19 @@ const DashHome = () => {
     queryFn: async () => {
       if (!uid) return [];
       const response = await axiosSecure.get(`/user/posts/${uid}`);
-      return response.data.slice(0, 3); // Limit to 3 recent posts
+      console.log('Recent posts:', response.data); // Debug posts data
+return response.data.slice(0, 3); // Limit to 3 recent posts
     },
     enabled: !!uid && !authLoading,
   });
+
+  // Invalidate queries after navigation from membership page
+  useEffect(() => {
+    if (window.location.state?.fromMembership) {
+      queryClient.invalidateQueries(['userSubscription', email]);
+      console.log('Invalidated userSubscription query after membership upgrade');
+    }
+  }, [email, queryClient]);
 
   useEffect(() => {
     if (postsData) {
@@ -105,7 +117,7 @@ const DashHome = () => {
                 e.target.onerror = null;
               }}
             />
-            {userData?.role === 'gold' && (
+            {userData?.subscription === 'premium' && (
               <span className="absolute top-0 right-0 bg-yellow-400 text-white text-xs px-2 py-1 rounded-full flex items-center shadow-md">
                 <FaCrown className="mr-1" /> Gold
               </span>
@@ -114,9 +126,12 @@ const DashHome = () => {
           <div className="text-center md:text-left">
             <h1 className="text-3xl font-extrabold text-gray-800">{displayName || 'User'}</h1>
             <p className="text-gray-600 mt-2">{email || 'No email provided'}</p>
+            <p className="text-gray-600 mt-1 bg-amber-500 rounded px-2 inline-block">
+              Subscription: {userData?.subscription === 'premium' ? 'Premium' : 'Free'}
+            </p>
             <p className="text-gray-600 mt-1">
               Total Posts: {postCount !== null ? postCount : 0}
-              {userData?.role !== 'gold' && (
+              {userData?.subscription !== 'premium' && (
                 <span className="text-gray-500 ml-2">(Free users: max 5 posts)</span>
               )}
             </p>
@@ -132,7 +147,7 @@ const DashHome = () => {
                 <span className="text-sm font-semibold text-gray-700">Bronze Badge</span>
               </div>
               {/* Gold Badge or Upgrade Button */}
-              {userData?.role === 'gold' ? (
+              {userData?.subscription === 'premium' ? (
                 <div className="flex items-center gap-2">
                   <img
                     src="https://img.icons8.com/color/48/000000/gold-medal.png"

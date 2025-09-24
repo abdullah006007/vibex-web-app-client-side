@@ -70,18 +70,17 @@ const AddPost = () => {
         }
     }, [uid, axiosSecure]);
 
-    // Fetch user role
+    // Fetch user subscription status
     const { data: userRoleData, isLoading: roleLoading } = useQuery({
-        queryKey: ['userRole', email],
+        queryKey: ['userSubscription', email],
         queryFn: async () => {
             if (!email) return null;
             const response = await axiosSecure.get(`/users/role/${email}`);
+            console.log('User subscription data:', response.data); // Debug API response
             return response.data;
         },
         enabled: !!email && !authLoading,
     });
-
-    const role = userRoleData?.role || 'user';
 
     // Handle form input changes
     const handleChange = (e) => {
@@ -204,11 +203,11 @@ const AddPost = () => {
                 tag: '',
             });
             alert('Post created successfully!');
-            // Redirect to posts page after successful submission
+            navigate('/dashboard/home'); // Redirect to dashboard after submission
         } catch (error) {
             console.error('Error creating post:', error);
             const errorMessage = error.response
-                ? error.response.data?.message || 'Server error. Please try again.'
+                ? error.response.data?.error || 'Server error. Please try again.'
                 : 'Network error. Please check if the server is running and try again.';
             setError(`Failed to create post: ${errorMessage}`);
         }
@@ -224,7 +223,7 @@ const AddPost = () => {
         e.target.src = 'https://via.placeholder.com/150?text=Error'; // Fallback for invalid image URLs
     };
 
-    // Show loading state while fetching post count or role
+    // Show loading state while fetching post count or subscription
     if (postCount === null || roleLoading || authLoading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -233,20 +232,20 @@ const AddPost = () => {
         );
     }
 
-    // Show Become a Member button if post count exceeds 5 AND user is not gold/admin
-    if (postCount >= 5 && role !== 'gold' && role !== 'admin') {
+    // Show Become a Member button if post count exceeds 5 AND user is not premium/admin
+    if (postCount >= 5 && userRoleData?.subscription !== 'premium' && userRoleData?.role !== 'admin') {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 flex items-center justify-center">
                 <div className="max-w-md mx-auto bg-white shadow-xl rounded-lg p-8 text-center">
                     <h1 className="text-3xl font-bold text-gray-800 mb-4">Post Limit Reached</h1>
                     <p className="text-gray-600 mb-6 text-lg">
-                        You've reached the maximum of 5 posts. Become a member to post more!
+                        You've reached the maximum of 5 posts. Become a Premium member to post more!
                     </p>
                     <button
                         onClick={handleBecomeMember}
                         className="bg-blue-600 text-white px-8 py-3 rounded-full hover:bg-blue-700 transition-colors duration-300 text-lg font-semibold"
                     >
-                        Become a Member
+                        Become a Premium Member
                     </button>
                 </div>
             </div>

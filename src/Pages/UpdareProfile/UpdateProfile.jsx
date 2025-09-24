@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import useAuth from '../../Hooks/useAuth';
 import useAxiosSecure from '../../Hooks/useAxiosSecure';
@@ -29,36 +28,30 @@ const UpdateProfile = () => {
         const fetchUserData = async () => {
             try {
                 setFetchingUserData(true);
-                const response = await axiosSecure.get(`/users/${user?.email}`);
-                
-                if (response.data.success) {
-                    // Set profile picture with priority: API data -> Firebase user -> placeholder
-                    const apiPhotoURL = response.data.data?.photoURL;
-                    const firebasePhotoURL = user?.photoURL;
-                    
-                    setProfilePic(apiPhotoURL || firebasePhotoURL || '');
-                    
-                    // Pre-fill form values
-                    setValue('name', response.data.data?.name || user?.displayName || '');
-                    setValue('phone', response.data.data?.phone || '');
-                    setValue('address', response.data.data?.address || '');
-                } else {
-                    // Fallback to Firebase user data if API fails
-                    setProfilePic(user?.photoURL || '');
-                    setValue('name', user?.displayName || '');
-                }
+                const response = await axiosSecure.get(`/users/role/${user?.email}`);
+                console.log('User role data:', response.data); // Debug role data
+
+                // Set profile picture with priority: API data -> Firebase user -> placeholder
+                const apiPhotoURL = response.data.photoURL;
+                const firebasePhotoURL = user?.photoURL;
+                setProfilePic(apiPhotoURL || firebasePhotoURL || '');
+
+                // Pre-fill form values
+                setValue('name', response.data.name || user?.displayName || '');
+                setValue('phone', response.data.phone || '');
+                setValue('address', response.data.address || '');
             } catch (error) {
                 console.error('Error fetching user data:', error);
                 // Fallback to Firebase user data
                 setProfilePic(user?.photoURL || '');
                 setValue('name', user?.displayName || '');
-                toast.error('Error', 'Could not load profile data. Using cached information.', 'error');
+                toast.error('Could not load profile data. Using cached information.');
             } finally {
                 setFetchingUserData(false);
             }
         };
 
-        if (user) {
+        if (user?.email) {
             fetchUserData();
         } else {
             setFetchingUserData(false);
@@ -68,134 +61,131 @@ const UpdateProfile = () => {
     // Handle file selection for cropping
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            // Check file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error('Error', 'Image must be less than 5MB', 'error');
-                return;
-            }
-            
-            // Check file type
-            if (!file.type.startsWith('image/')) {
-                toast.error('Error', 'Please select an image file', 'error');
-                return;
-            }
-            
-            setSelectedFile(URL.createObjectURL(file));
-            setCropModalOpen(true);
+        if (!file) return;
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image must be less than 5MB');
+            return;
         }
+
+        // Validate file type
+        const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validImageTypes.includes(file.type)) {
+            toast.error('Please select a JPEG, PNG, or GIF image');
+            return;
+        }
+
+        setSelectedFile(URL.createObjectURL(file));
+        setCropModalOpen(true);
     };
 
     // Handle crop and upload
     const handleCropAndUpload = async () => {
-        if (cropperRef.current) {
-            const cropper = cropperRef.current.cropper;
-            cropper.getCroppedCanvas().toBlob(async (blob) => {
-                if (!blob) {
-                    toast.error('Error', 'Failed to crop image. Please try again.', 'error');
-                    return;
-                }
+        if (!cropperRef.current) {
+            toast.error('Failed to initialize cropper');
+            return;
+        }
 
-                setImageUploading(true);
-                setUploadProgress(0);
-                setCropModalOpen(false);
+        const cropper = cropperRef.current.cropper;
+        cropper.getCroppedCanvas().toBlob(async (blob) => {
+            if (!blob) {
+                toast.error('Failed to crop image. Please try again.');
+                return;
+            }
 
-                try {
-                    const imageUploadUrl = `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_image_upload_key}`;
-                    const uploadFormData = new FormData();
-                    uploadFormData.append('image', blob, 'profile_picture.jpg');
+            setImageUploading(true);
+            setUploadProgress(0);
+            setCropModalOpen(false);
 
-                    // Use XMLHttpRequest for better progress tracking
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', imageUploadUrl, true);
+            try {
+                const imageUploadUrl = `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_image_upload_key}`;
+                const uploadFormData = new FormData();
+                uploadFormData.append('image', blob, 'profile_picture.jpg');
 
-                    // Track upload progress
-                    xhr.upload.onprogress = (event) => {
-                        if (event.lengthComputable) {
-                            const percentCompleted = Math.round((event.loaded * 100) / event.total);
-                            setUploadProgress(percentCompleted);
-                        }
-                    };
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', imageUploadUrl, true);
 
-                    // Handle upload completion
-                    xhr.onload = () => {
-                        if (xhr.status === 200) {
-                            const response = JSON.parse(xhr.responseText);
-                            if (response.success) {
-                                setProfilePic(response.data.url);
-                                toast.success('Success!', 'Profile picture uploaded successfully', 'success');
-                            } else {
-                                throw new Error(response.error?.message || 'Upload failed');
-                            }
+                // Track upload progress
+                xhr.upload.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const percentCompleted = Math.round((event.loaded * 100) / event.total);
+                        setUploadProgress(percentCompleted);
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            setProfilePic(response.data.url);
+                            toast.success('Profile picture uploaded successfully');
                         } else {
-                            throw new Error(`Upload failed with status ${xhr.status}`);
+                            throw new Error(response.error?.message || 'Upload failed');
                         }
-                        setImageUploading(false);
-                        setUploadProgress(0);
-                        setSelectedFile(null);
-                    };
-
-                    // Handle upload errors
-                    xhr.onerror = () => {
-                        toast.error('Error', 'Failed to upload photo: Network error. Please try again.', 'error');
-                        setImageUploading(false);
-                        setUploadProgress(0);
-                        setSelectedFile(null);
-                    };
-
-                    xhr.send(uploadFormData);
-                } catch (error) {
-                    console.error('Error uploading photo:', error.message);
-                    toast.error('Error', `Failed to upload photo: ${error.message}. Please check your network or API key and try again.`, 'error');
+                    } else {
+                        throw new Error(`Upload failed with status ${xhr.status}`);
+                    }
                     setImageUploading(false);
                     setUploadProgress(0);
                     setSelectedFile(null);
-                }
-            }, 'image/jpeg');
-        }
+                };
+
+                xhr.onerror = () => {
+                    toast.error('Failed to upload photo: Network error');
+                    setImageUploading(false);
+                    setUploadProgress(0);
+                    setSelectedFile(null);
+                };
+
+                xhr.send(uploadFormData);
+            } catch (error) {
+                console.error('Error uploading photo:', error.message);
+                toast.error(`Failed to upload photo: ${error.message}`);
+                setImageUploading(false);
+                setUploadProgress(0);
+                setSelectedFile(null);
+            }
+        }, 'image/jpeg');
     };
 
     // Handle delete photo
     const handleDeletePhoto = () => {
         setProfilePic('');
-        toast.success('Success!', 'Profile picture removed', 'success');
+        toast.success('Profile picture removed');
     };
 
+    // Handle form submission
     const onSubmit = async (data) => {
         setLoading(true);
-
         try {
-            // Update Firebase authentication profile
+            // Update Firebase profile if name or photo changed
             if (data.name !== user.displayName || profilePic !== user.photoURL) {
                 await updateUserProfile({
                     displayName: data.name,
-                    photoURL: profilePic || null
+                    photoURL: profilePic || 'https://via.placeholder.com/150?text=User' // Fallback URL
                 });
             }
 
-            // Update user data in MongoDB
+            // Update MongoDB user data
             const response = await axiosSecure.put('/users/update', {
                 email: user.email,
                 updates: {
                     name: data.name,
-                    phone: data.phone,
-                    address: data.address,
+                    phone: data.phone || null,
+                    address: data.address || null,
                     photoURL: profilePic || null
                 }
             });
 
             if (response.data.success) {
-                toast.success('Success!', 'Profile updated successfully', 'success');
+                toast.success('Profile updated successfully');
             } else {
-                toast.error('Error', response.data.message || 'Failed to update profile', 'error');
+                toast.error(response.data.message || 'Failed to update profile');
             }
         } catch (error) {
             console.error('Update error:', error);
-            toast.error(
-                'Error',
-                error.response?.data?.message || error.message || 'Failed to update profile',
-                'error'
-            );
+            toast.error(error.response?.data?.message || 'Failed to update profile');
         } finally {
             setLoading(false);
         }
@@ -203,16 +193,10 @@ const UpdateProfile = () => {
 
     // Handle image load error
     const handleImageError = (e) => {
-        e.target.src = '';
         e.target.style.display = 'none';
-        // Show the user icon when image fails to load
-        const iconElement = e.target.nextSibling;
-        if (iconElement) {
-            iconElement.style.display = 'flex';
-        }
+        e.target.nextSibling.style.display = 'flex';
     };
 
-    // Show loading state while fetching user data
     if (fetchingUserData) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 flex items-center justify-center">
@@ -242,7 +226,10 @@ const UpdateProfile = () => {
                                             className="w-full h-full object-cover"
                                             onError={handleImageError}
                                         />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-200 hidden">
+                                        <div
+                                            className="absolute inset-0 flex items-center justify-center bg-gray-200"
+                                            style={{ display: 'none' }}
+                                        >
                                             <FaUser className="text-gray-400 text-4xl" />
                                         </div>
                                     </>
@@ -254,7 +241,7 @@ const UpdateProfile = () => {
                                 <label className="bg-blue-600 text-white p-3 rounded-full cursor-pointer hover:bg-blue-700 transition-colors shadow-md">
                                     <input
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/jpeg,image/png,image/gif"
                                         onChange={handleFileSelect}
                                         className="hidden"
                                         disabled={imageUploading}
@@ -270,6 +257,7 @@ const UpdateProfile = () => {
                                         type="button"
                                         onClick={handleDeletePhoto}
                                         className="bg-red-600 text-white p-3 rounded-full hover:bg-red-700 transition-colors shadow-md"
+                                        disabled={imageUploading}
                                     >
                                         <FaTrash className="h-5 w-5" />
                                     </button>
@@ -288,7 +276,7 @@ const UpdateProfile = () => {
                             </div>
                         )}
                         <p className="text-sm text-gray-500 mt-2">
-                            Click the upload button to change your profile picture
+                            Upload a JPEG, PNG, or GIF image (max 5MB)
                         </p>
                     </div>
 
@@ -297,7 +285,10 @@ const UpdateProfile = () => {
                         <label className="block text-gray-700 font-medium mb-2">Full Name *</label>
                         <input
                             type="text"
-                            {...register('name', { required: "Name is required" })}
+                            {...register('name', {
+                                required: 'Name is required',
+                                minLength: { value: 2, message: 'Name must be at least 2 characters' }
+                            })}
                             className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                             placeholder="Enter your full name"
                         />
@@ -311,7 +302,7 @@ const UpdateProfile = () => {
                         <label className="block text-gray-700 font-medium mb-2">Email</label>
                         <input
                             type="email"
-                            defaultValue={user?.email || ''}
+                            value={user?.email || ''}
                             readOnly
                             className="w-full p-3 border rounded-lg bg-gray-100 cursor-not-allowed"
                         />
@@ -322,10 +313,18 @@ const UpdateProfile = () => {
                         <label className="block text-gray-700 font-medium mb-2">Phone Number</label>
                         <input
                             type="tel"
-                            {...register('phone')}
+                            {...register('phone', {
+                                pattern: {
+                                    value: /^\+?[1-9]\d{1,14}$/,
+                                    message: 'Enter a valid phone number (e.g., +8801234567890)'
+                                }
+                            })}
                             className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                            placeholder="+880XXXXXXXXXX"
+                            placeholder="+8801234567890"
                         />
+                        {errors.phone && (
+                            <p className="text-red-500 text-sm mt-2">{errors.phone.message}</p>
+                        )}
                     </div>
 
                     {/* Address */}
@@ -380,7 +379,10 @@ const UpdateProfile = () => {
                 )}
                 <div className="mt-4 flex justify-end gap-4">
                     <button
-                        onClick={() => setCropModalOpen(false)}
+                        onClick={() => {
+                            setCropModalOpen(false);
+                            setSelectedFile(null);
+                        }}
                         className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
                     >
                         Cancel
@@ -388,9 +390,10 @@ const UpdateProfile = () => {
                     <button
                         onClick={handleCropAndUpload}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                        disabled={imageUploading}
                     >
                         <FaCropAlt className="mr-2" />
-                        Crop & Upload
+                        {imageUploading ? 'Uploading...' : 'Crop & Upload'}
                     </button>
                 </div>
             </Modal>
