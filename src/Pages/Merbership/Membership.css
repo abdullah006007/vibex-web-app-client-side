@@ -1,0 +1,26 @@
+/* Add any custom animations or overrides here */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.animate-bounce {
+    animation: bounce 1s infinite;
+}
+
+/* Payment form overrides if needed */
+.payment-form {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+}
+
+.error-message {
+    background-color: #fee2e2;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 12px;
+}

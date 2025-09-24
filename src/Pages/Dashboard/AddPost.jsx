@@ -7,11 +7,12 @@ import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
 import Modal from 'react-modal';
 import useAxiosSecure from '../../Hooks/useAxiosSecure';
+import { useQuery } from '@tanstack/react-query';
 
 Modal.setAppElement('#root'); // Set the app element for accessibility
 
 const AddPost = () => {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const axiosSecure = useAxiosSecure();
     const { displayName, email, photoURL, uid } = user || {};
     const navigate = useNavigate();
@@ -68,6 +69,19 @@ const AddPost = () => {
             fetchPostCount();
         }
     }, [uid, axiosSecure]);
+
+    // Fetch user role
+    const { data: userRoleData, isLoading: roleLoading } = useQuery({
+        queryKey: ['userRole', email],
+        queryFn: async () => {
+            if (!email) return null;
+            const response = await axiosSecure.get(`/users/role/${email}`);
+            return response.data;
+        },
+        enabled: !!email && !authLoading,
+    });
+
+    const role = userRoleData?.role || 'user';
 
     // Handle form input changes
     const handleChange = (e) => {
@@ -210,8 +224,8 @@ const AddPost = () => {
         e.target.src = 'https://via.placeholder.com/150?text=Error'; // Fallback for invalid image URLs
     };
 
-    // Show loading state while fetching post count
-    if (postCount === null) {
+    // Show loading state while fetching post count or role
+    if (postCount === null || roleLoading || authLoading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
                 <p className="text-gray-600 text-lg">Loading...</p>
@@ -219,8 +233,8 @@ const AddPost = () => {
         );
     }
 
-    // Show Become a Member button if post count exceeds 5
-    if (postCount >= 5) {
+    // Show Become a Member button if post count exceeds 5 AND user is not gold/admin
+    if (postCount >= 5 && role !== 'gold' && role !== 'admin') {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 flex items-center justify-center">
                 <div className="max-w-md mx-auto bg-white shadow-xl rounded-lg p-8 text-center">
