@@ -1,23 +1,30 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FaUser, FaSearch } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import useAxiosSecure from '../../Hooks/useAxiosSecure';
 import useAuth from '../../Hooks/useAuth';
 
 const FindConnection = () => {
-  const { user: authUser, loading: authLoading } = useAuth(); // Renamed to authUser to avoid naming conflict
+  const { user: authUser, loading: authLoading } = useAuth();
   const axiosSecure = useAxiosSecure();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [visibleUsers, setVisibleUsers] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 5; // Users per page
 
-  // Fetch users
-  const { data: users = [], isLoading: isUsersLoading, error: usersError } = useQuery({
-    queryKey: ['public-users', searchTerm],
+  // Fetch users with pagination
+  const { data, isLoading: isUsersLoading, error: usersError } = useQuery({
+    queryKey: ['public-users', searchTerm, currentPage],
     queryFn: async () => {
       try {
-        const response = await axiosSecure.get(`/public-users?search=${encodeURIComponent(searchTerm)}`);
-        console.log('Fetched users:', response.data); // Debug log
+        const params = new URLSearchParams({
+          search: searchTerm,
+          page: currentPage.toString(),
+          limit: limit.toString(),
+        });
+        const response = await axiosSecure.get(`/public-users?${params.toString()}`);
+        console.log('Fetched users:', response.data);
         return response.data;
       } catch (err) {
         console.error('Error fetching users:', err.response?.data || err.message);
@@ -27,13 +34,17 @@ const FindConnection = () => {
     enabled: !!authUser?.email && !authLoading,
   });
 
+  // Destructure paginated data
+  const users = data?.users || [];
+  const totalPages = data?.totalPages || 1;
+
   // Fetch connections
   const { data: connections = [], isLoading: isConnectionsLoading } = useQuery({
     queryKey: ['connections', authUser?.email],
     queryFn: async () => {
       try {
         const response = await axiosSecure.get(`/connections/${authUser?.email}`);
-        console.log('Fetched connections:', response.data); // Debug log
+        console.log('Fetched connections:', response.data);
         return response.data;
       } catch (err) {
         console.error('Error fetching connections:', err.response?.data || err.message);
@@ -51,6 +62,9 @@ const FindConnection = () => {
     },
     onSuccess: (data) => {
       toast.success(`Connection request sent to ${data.userName}!`);
+      // Invalidate both queries to refresh data
+      queryClient.invalidateQueries(['connections', authUser?.email]);
+      queryClient.invalidateQueries(['public-users', searchTerm, currentPage]);
     },
     onError: (err) => {
       console.error('Error sending connection request:', err.response?.data || err.message);
@@ -64,7 +78,7 @@ const FindConnection = () => {
       console.error('No authenticated user email');
       return;
     }
-    console.log('Sending connection request:', { fromEmail: authUser.email, toEmail, userName }); // Debug log
+    console.log('Sending connection request:', { fromEmail: authUser.email, toEmail, userName });
     connectMutation.mutate({ fromEmail: authUser.email, toEmail, userName });
   };
 
@@ -80,12 +94,14 @@ const FindConnection = () => {
   // Handle search input
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setVisibleUsers(5);
+    setCurrentPage(1); // Reset to first page on search
   };
 
-  // Load more users
-  const handleLoadMore = () => {
-    setVisibleUsers((prev) => prev + 5);
+  // Handle page change
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   // Handle image load error
@@ -160,7 +176,7 @@ const FindConnection = () => {
 
       {!isUsersLoading && !isConnectionsLoading && !authLoading && !usersError && users.length > 0 && (
         <div className="space-y-3 fade-in">
-          {users.slice(0, visibleUsers).map((user) => {
+          {users.map((user) => {
             const connectionStatus = getConnectionStatus(user.email);
             const isCurrentUser = authUser?.email && user.email.toLowerCase() === authUser.email.toLowerCase();
             const isPending = connectionStatus === 'pending';
@@ -169,7 +185,7 @@ const FindConnection = () => {
               ? 'bg-gray-300 text-gray-600 opacity-50 cursor-not-allowed'
               : 'bg-indigo-600 text-white hover:bg-indigo-700';
 
-            console.log('User check:', { userEmail: user.email, authUserEmail: authUser?.email, isCurrentUser, connectionStatus }); // Debug log
+            console.log('User check:', { userEmail: user.email, authUserEmail: authUser?.email, isCurrentUser, connectionStatus });
 
             return (
               <div
@@ -220,15 +236,45 @@ const FindConnection = () => {
         </div>
       )}
 
-      {/* Load More Button */}
-      {!isUsersLoading && !isConnectionsLoading && !authLoading && !usersError && users.length > visibleUsers && (
-        <div className="mt-4 text-center fade-in">
+      {/* Pagination Controls */}
+      {!isUsersLoading && !isConnectionsLoading && !authLoading && !usersError && totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-4 fade-in">
           <button
-            onClick={handleLoadMore}
-            className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors hover-lift"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 rounded-md"
           >
-            Load More
+            Previous
           </button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const pageNum = currentPage <= 3 ? i + 1 : currentPage > totalPages - 3 ? totalPages - 4 + i : currentPage - 2 + i;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                className={`px-3 py-1 text-xs rounded-md ${
+                  currentPage === pageNum
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 rounded-md"
+          >
+            Next
+          </button>
+          {totalPages > 5 && (
+            <>
+              {currentPage > 3 && <span className="px-1 text-xs text-gray-500">...</span>}
+              {currentPage <= totalPages - 3 && <span className="px-1 text-xs text-gray-500">...</span>}
+            </>
+          )}
         </div>
       )}
     </div>

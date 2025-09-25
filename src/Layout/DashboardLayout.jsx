@@ -58,7 +58,10 @@ console.log(role);
           {/* navigation link */}
 
 
-          <NavLink
+         {
+          !roleLoading && role === 'user' && 
+          <>
+           <NavLink
             to="/dashboard/home"
             className={({ isActive }) =>
               `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'}`
@@ -95,6 +98,22 @@ console.log(role);
 
 
           <NavLink
+            to="/dashboard/update-profile"
+            className={({ isActive }) =>
+              `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'
+              }`
+            }
+          >
+            <AiOutlineUser className="text-lg" />
+            <span>Update Profile</span>
+          </NavLink>
+          
+          </>
+         }
+
+
+
+         <NavLink
             to="/dashboard/update-profile"
             className={({ isActive }) =>
               `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'

@@ -2,7 +2,7 @@
 @plugin "daisyui"{
     themes: light --default
 }
-
+@tailwind utilities;
 
 @plugin "daisyui/theme" {
   name: "light";

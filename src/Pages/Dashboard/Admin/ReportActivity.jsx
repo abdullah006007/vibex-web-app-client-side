@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FaTrash, FaUserTimes, FaEye } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 import useAxiosSecure from '../../../Hooks/useAxiosSecure';
 import useAuth from '../../../Hooks/useAuth';
 
@@ -9,12 +10,13 @@ const ReportActivity = () => {
   const { email } = user || {};
   const axiosInstance = useAxiosSecure();
   const queryClient = useQueryClient();
-
   const [selectedReport, setSelectedReport] = useState(null);
   const [showBanModal, setShowBanModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10; // Show 10 reports per page
 
   // Fetch user role
-  const { data: roleData, isLoading: isLoadingRole } = useQuery({
+  const { data: roleData, isLoading: isLoadingRole, isError: isRoleError, error: roleError } = useQuery({
     queryKey: ['role', email],
     queryFn: async () => {
       if (!email) throw new Error('Email is required');
@@ -26,32 +28,47 @@ const ReportActivity = () => {
 
   const role = roleData?.role;
 
-  // Fetch reports
-  const { data: reports = [], isLoading: isLoadingReports } = useQuery({
-    queryKey: ['reports'],
+  // Fetch reports with pagination
+  const { data, isLoading: isLoadingReports, isError: isReportsError, error: reportsError } = useQuery({
+    queryKey: ['reports', currentPage],
     queryFn: async () => {
-      const response = await axiosInstance.get('/reports');
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: limit.toString(),
+      });
+      const response = await axiosInstance.get(`/reports?${params.toString()}`);
       return response.data;
     },
     enabled: role === 'admin',
+    keepPreviousData: true,
   });
 
+  // Destructure paginated data
+  const reports = data?.reports || [];
+  const totalPages = data?.totalPages || 1;
+
   // Fetch all posts
-  const { data: posts = [], isLoading: isLoadingPosts } = useQuery({
+  const { data: postsData = { posts: [] }, isLoading: isLoadingPosts, isError: isPostsError, error: postsError } = useQuery({
     queryKey: ['allPosts'],
     queryFn: async () => {
       const response = await axiosInstance.get('/user/all-post');
+      console.log('Posts response:', response.data); // Debug log
+      if (!response.data.posts) {
+        throw new Error('No posts data received');
+      }
       return response.data;
     },
     enabled: role === 'admin',
   });
 
+  const posts = Array.isArray(postsData.posts) ? postsData.posts : [];
+
   // Fetch all users
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
+  const { data: users = [], isLoading: isLoadingUsers, isError: isUsersError, error: usersError } = useQuery({
     queryKey: ['allUsers'],
     queryFn: async () => {
       const response = await axiosInstance.get('/users');
-      return response.data;
+      return response.data.users || [];
     },
     enabled: role === 'admin',
   });
@@ -64,15 +81,15 @@ const ReportActivity = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['allUsers']);
-      queryClient.invalidateQueries(['reports']);
+      queryClient.invalidateQueries(['reports', currentPage]);
       queryClient.invalidateQueries(['allPosts']);
-      alert('User banned successfully!');
+      toast.success('User banned successfully!');
       setShowBanModal(false);
       setSelectedReport(null);
     },
     onError: (error) => {
       const errorMessage = error.response?.data?.message || 'Failed to ban user';
-      alert(errorMessage);
+      toast.error(errorMessage);
     },
   });
 
@@ -83,13 +100,13 @@ const ReportActivity = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['reports']);
+      queryClient.invalidateQueries(['reports', currentPage]);
       queryClient.invalidateQueries(['allPosts']);
-      alert('Comment deleted successfully!');
+      toast.success('Comment deleted successfully!');
     },
     onError: (error) => {
       const errorMessage = error.response?.data?.error || 'Failed to delete comment';
-      alert(errorMessage);
+      toast.error(errorMessage);
     },
   });
 
@@ -112,6 +129,13 @@ const ReportActivity = () => {
     }
   };
 
+  // Handle page change
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   // Render loading state
   if (isLoadingRole || (role === 'admin' && (isLoadingReports || isLoadingPosts || isLoadingUsers))) {
     return (
@@ -121,13 +145,15 @@ const ReportActivity = () => {
     );
   }
 
-  // Render unauthorized
-  if (role !== 'admin') {
+  // Render unauthorized or role error
+  if (isRoleError || role !== 'admin') {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 flex items-center justify-center">
         <div className="max-w-md mx-auto bg-white shadow-xl rounded-lg p-8 text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Unauthorized</h1>
-          <p className="text-gray-600">You do not have permission to access this page.</p>
+          <p className="text-gray-600">
+            {isRoleError ? roleError.message || 'Failed to load user role' : 'You do not have permission to access this page.'}
+          </p>
         </div>
       </div>
     );
@@ -135,7 +161,7 @@ const ReportActivity = () => {
 
   // Enrich reports with additional data
   const enrichedReports = reports.map((report) => {
-    const post = posts.find((p) => p._id === report.postId);
+    const post = Array.isArray(posts) ? posts.find((p) => p._id === report.postId) : null;
     const comment = post ? post.comments.find((c) => c._id.toString() === report.commentId.toString()) : null;
     const commentedUser = comment ? users.find((u) => u.email === comment.userEmail) : null;
 
@@ -149,108 +175,182 @@ const ReportActivity = () => {
     };
   });
 
-  const selectedPost = selectedReport ? posts.find((p) => p._id === selectedReport.postId) : null;
+  const selectedPost = selectedReport && Array.isArray(posts) ? posts.find((p) => p._id === selectedReport.postId) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Reported Activities</h1>
-        {enrichedReports.length === 0 ? (
+        {isReportsError ? (
+          <div className="bg-white shadow-xl rounded-lg p-8 text-center">
+            <p className="text-red-600 text-lg">{reportsError.response?.data?.details || reportsError.message || 'Failed to load reports'}</p>
+            <button
+              onClick={() => queryClient.invalidateQueries(['reports', currentPage])}
+              className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            >
+              Retry
+            </button>
+          </div>
+        ) : isPostsError ? (
+          <div className="bg-white shadow-xl rounded-lg p-8 text-center">
+            <p className="text-red-600 text-lg">{postsError.response?.data?.details || postsError.message || 'Failed to load posts'}</p>
+            <button
+              onClick={() => queryClient.invalidateQueries(['allPosts'])}
+              className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            >
+              Retry
+            </button>
+          </div>
+        ) : isUsersError ? (
+          <div className="bg-white shadow-xl rounded-lg p-8 text-center">
+            <p className="text-red-600 text-lg">{usersError.response?.data?.details || usersError.message || 'Failed to load users'}</p>
+            <button
+              onClick={() => queryClient.invalidateQueries(['allUsers'])}
+              className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            >
+              Retry
+            </button>
+          </div>
+        ) : enrichedReports.length === 0 ? (
           <div className="bg-white shadow-xl rounded-lg p-8 text-center">
             <p className="text-gray-600 text-lg">No reported activities found.</p>
           </div>
         ) : (
-          <div className="bg-white shadow-xl rounded-lg overflow-x-auto">
-            <table className="w-full table-auto divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Post Title
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Comment Text
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Commented By
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Reporter
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Feedback
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Reported At
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {enrichedReports.map((report) => (
-                  <tr key={`${report.postId}-${report.commentId}`}>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      {report.postTitle}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      {report.commentText}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      {report.commentedByName} ({report.commentedByEmail})
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      {report.reporterEmail}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      {report.feedback}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
-                      {new Date(report.reportedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                    <td className="px-4 py-4 text-sm font-medium flex flex-col sm:flex-row gap-2">
-                      <button
-                        onClick={() => setSelectedReport(report)}
-                        className="text-blue-600 hover:text-blue-800 flex items-center"
-                        title="View Post"
-                      >
-                        <FaEye className="mr-1" /> View
-                      </button>
-                      <button
-                        onClick={() => handleDeleteComment(report.postId, report.commentId)}
-                        className="text-red-600 hover:text-red-800 flex items-center"
-                        title="Delete Comment"
-                        disabled={deleteCommentMutation.isLoading}
-                      >
-                        <FaTrash className="mr-1" /> Delete
-                      </button>
-                      {report.commentedUserId ? (
-                        <button
-                          onClick={() => {
-                            setSelectedReport(report);
-                            setShowBanModal(true);
-                          }}
-                          className="text-red-600 hover:text-red-800 flex items-center"
-                          title="Ban User"
-                          disabled={deleteUserMutation.isLoading}
-                        >
-                          <FaUserTimes className="mr-1" /> Ban
-                        </button>
-                      ) : (
-                        <p className="text-gray-500">User not found</p>
-                      )}
-                    </td>
+          <>
+            <div className="bg-white shadow-xl rounded-lg overflow-x-auto">
+              <table className="w-full table-auto divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Post Title
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Comment Text
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Commented By
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Reporter
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Feedback
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Reported At
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {enrichedReports.map((report) => (
+                    <tr key={`${report.postId}-${report.commentId}`}>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {report.postTitle}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {report.commentText}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {report.commentedByName} ({report.commentedByEmail})
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {report.reporterEmail}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {report.feedback}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">
+                        {new Date(report.reportedAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="px-4 py-4 text-sm font-medium flex flex-col sm:flex-row gap-2">
+                        <button
+                          onClick={() => setSelectedReport(report)}
+                          className="text-blue-600 hover:text-blue-800 flex items-center"
+                          title="View Post"
+                        >
+                          <FaEye className="mr-1" /> View
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComment(report.postId, report.commentId)}
+                          className="text-red-600 hover:text-red-800 flex items-center"
+                          title="Delete Comment"
+                          disabled={deleteCommentMutation.isLoading}
+                        >
+                          <FaTrash className="mr-1" /> Delete
+                        </button>
+                        {report.commentedUserId ? (
+                          <button
+                            onClick={() => {
+                              setSelectedReport(report);
+                              setShowBanModal(true);
+                            }}
+                            className="text-red-600 hover:text-red-800 flex items-center"
+                            title="Ban User"
+                            disabled={deleteUserMutation.isLoading}
+                          >
+                            <FaUserTimes className="mr-1" /> Ban
+                          </button>
+                        ) : (
+                          <p className="text-gray-500">User not found</p>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-4">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 rounded-md"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = currentPage <= 3 ? i + 1 : currentPage > totalPages - 3 ? totalPages - 4 + i : currentPage - 2 + i;
+                  if (pageNum < 1 || pageNum > totalPages) return null;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1 text-xs rounded-md ${
+                        currentPage === pageNum
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 rounded-md"
+                >
+                  Next
+                </button>
+                {totalPages > 5 && (
+                  <>
+                    {currentPage > 3 && <span className="px-1 text-xs text-gray-500">...</span>}
+                    {currentPage <= totalPages - 3 && <span className="px-1 text-xs text-gray-500">...</span>}
+                  </>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -382,4 +482,40 @@ const ReportActivity = () => {
   );
 };
 
-export default ReportActivity;
+// Error Boundary Component
+class ReportActivityErrorBoundary extends React.Component {
+  state = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 flex items-center justify-center">
+          <div className="max-w-md mx-auto bg-white shadow-xl rounded-lg p-8 text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Something Went Wrong</h1>
+            <p className="text-gray-600 mb-4">{this.state.error?.message || 'An unexpected error occurred'}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Wrap ReportActivity with ErrorBoundary
+const WrappedReportActivity = () => (
+  <ReportActivityErrorBoundary>
+    <ReportActivity />
+  </ReportActivityErrorBoundary>
+);
+
+export default WrappedReportActivity;

@@ -10,24 +10,31 @@ const ManageUser = () => {
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth(); // logged-in admin
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [confirmDeleteUser, setConfirmDeleteUser] = useState(null); // for confirmation modal
+  const limit = 10; // Number of users per page
 
   // === Fetch Users ===
-  const { data: users = [], isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["users", search],
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["users", search, currentPage],
     queryFn: async () => {
-      const res = await axiosSecure.get(`/users?search=${search}`);
+      const res = await axiosSecure.get(`/users?search=${search}&page=${currentPage}&limit=${limit}`);
       return res.data;
     },
     keepPreviousData: true,
   });
+
+  // Destructure users and pagination data
+  const users = data?.users || [];
+  const totalPages = data?.totalPages || 1;
+  const currentPageFromApi = data?.currentPage || 1;
 
   // === Make Admin Mutation ===
   const makeAdminMutation = useMutation({
     mutationFn: async (id) => axiosSecure.patch(`/users/make-admin/${id}`),
     onSuccess: () => {
       toast.success("User promoted to admin successfully!");
-      queryClient.invalidateQueries(["users", search]);
+      queryClient.invalidateQueries(["users", search, currentPage]);
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to promote user");
@@ -39,7 +46,7 @@ const ManageUser = () => {
     mutationFn: async (id) => axiosSecure.patch(`/users/remove-admin/${id}`),
     onSuccess: () => {
       toast.success("Admin removed successfully!");
-      queryClient.invalidateQueries(["users", search]);
+      queryClient.invalidateQueries(["users", search, currentPage]);
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to remove admin");
@@ -52,7 +59,7 @@ const ManageUser = () => {
     onSuccess: () => {
       toast.success("User deleted successfully!");
       setConfirmDeleteUser(null);
-      queryClient.invalidateQueries(["users", search]);
+      queryClient.invalidateQueries(["users", search, currentPage]);
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to delete user");
@@ -62,12 +69,20 @@ const ManageUser = () => {
   // === Handlers ===
   const handleSearch = (e) => {
     e.preventDefault();
+    setCurrentPage(1); // Reset to first page on new search
     refetch();
   };
 
   const handleMakeAdmin = (id) => makeAdminMutation.mutate(id);
   const handleRemoveAdmin = (id) => removeAdminMutation.mutate(id);
   const handleDeleteUser = (id) => deleteUserMutation.mutate(id);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      refetch();
+    }
+  };
 
   return (
     <div className="p-6">
@@ -181,6 +196,37 @@ const ManageUser = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center items-center gap-2 mt-6">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+        >
+          Previous
+        </button>
+        {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={`px-4 py-2 rounded-xl ${
+              currentPage === page
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
 
       {/* Confirmation Modal */}

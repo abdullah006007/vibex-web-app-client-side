@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import useAuth from '../../Hooks/useAuth';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom'; // Updated import
 import SocialLogin from './SocialLogin/SocialLogin';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -13,57 +13,61 @@ const Register = () => {
     const [profilePic, setProfilePic] = useState();
     const axiosInstance = useAxios();
     const navigate = useNavigate();
-    const form = location.state?.form || '/';
+    const from = location.state?.from || '/'; // Fixed typo: 'form' to 'from'
 
-    const onSubmit = (data) => {
-        createUser(data.email, data.password)
-            .then(async (result) => {
-                
-                // user info
-                const userInfo = {
-                    username: data.name,
-                    email: data.email,
-                    role: 'user',
-                    subscription: 'free',
-                    Badge: 'Bronze',
-                    created_at: new Date().toISOString(),
-                    last_log_in: new Date().toISOString(),
-                };
-                await axiosInstance.post('/users', userInfo);
+    const onSubmit = async (data) => {
+        try {
+            const result = await createUser(data.email, data.password);
 
-                // update profile
-                const userProfile = {
-                    displayName: data.name,
-                    photoUrl: profilePic,
-                };
+            // User info for MongoDB
+            const userInfo = {
+                name: data.name, // Use 'name' for consistency
+                username: data.name, // Keep 'username' for backward compatibility
+                email: data.email.toLowerCase().trim(),
+                role: 'user',
+                subscription: 'free',
+                Badge: 'Bronze',
+                created_at: new Date().toISOString(),
+                last_log_in: new Date().toISOString(),
+                photoURL: profilePic || '', // Include photoURL
+            };
+            await axiosInstance.post('/users', userInfo);
 
-                updateUserProfile(userProfile)
-                    .then(() => {
-                        console.log('Profile updated');
-                    })
-                    .catch((error) => console.log(error));
+            // Update Firebase profile
+            const userProfile = {
+                displayName: data.name,
+                photoURL: profilePic || null, // Use photoURL for Firebase
+            };
 
-                navigate(form);
-                toast.success('Registered successfully!');
-            })
-            .catch((error) => {
-                console.log(error);
-                toast.error(error.message);
-            });
+            await updateUserProfile(userProfile);
+            console.log('Profile updated');
+
+            navigate(from);
+            toast.success('Registered successfully!');
+        } catch (error) {
+            console.error('Registration error:', error);
+            toast.error(error.message || 'Failed to register');
+        }
     };
 
     const handleImageUpload = async (e) => {
         const image = e.target.files[0];
-        const formData = new FormData();
-        formData.append('image', image);
+        if (!image) return;
 
-        const imageUploadUrl = `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_image_upload_key}`;
-        const res = await axios.post(imageUploadUrl, formData);
-        setProfilePic(res.data.data.url);
+        try {
+            const formData = new FormData();
+            formData.append('image', image);
+            const imageUploadUrl = `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_image_upload_key}`;
+            const res = await axios.post(imageUploadUrl, formData);
+            setProfilePic(res.data.data.url);
+        } catch (error) {
+            console.error('Image upload error:', error);
+            toast.error('Failed to upload profile picture');
+        }
     };
 
     return (
-        <div className="flex items-center justify-center   px-4">
+        <div className="flex items-center justify-center px-4">
             <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-6">
                 <h2 className="text-xl font-semibold text-center text-gray-800 mb-4">
                     Create an Account ✨
@@ -91,6 +95,7 @@ const Register = () => {
                             type="file"
                             onChange={handleImageUpload}
                             className="w-full text-sm border rounded-md px-2 py-1 cursor-pointer focus:outline-none"
+                            accept="image/*"
                         />
                     </div>
 

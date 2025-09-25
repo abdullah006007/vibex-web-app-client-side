@@ -28,38 +28,38 @@ export const router = createBrowserRouter([
     path: "/",
     Component: RootLayout,
     children: [
-        {
-            index: true,
-            Component : Home
-        }
-        ,{
-          path: 'join-us',
-          Component : JoinUs
-        }
-        ,{
-          path: 'about',
-          Component : About
-        }
-        ,{
-          path: 'membership',
-        element : <PrivateRoute>
+      {
+        index: true,
+        Component: Home
+      }
+      , {
+        path: 'join-us',
+        Component: JoinUs
+      }
+      , {
+        path: 'about',
+        Component: About
+      }
+      , {
+        path: 'membership',
+        element: <PrivateRoute>
           <Membership></Membership>
         </PrivateRoute>
-        }
+      }
     ]
   },
   {
     path: '/',
     Component: AuthLayout,
     children: [
-        {
-            path: 'login',
-            Component: LogIn
-        },
-        {
-            path : 'register',
-            Component: Register
-        }
+      {
+        path: 'login',
+        Component: LogIn
+      },
+      {
+        path: 'register',
+        Component: Register
+      }
     ]
   },
   {
@@ -69,22 +69,22 @@ export const router = createBrowserRouter([
     </PrivateRoute>,
     children: [
       {
-        path:'home',
+        path: 'home',
         element: <PrivateRoute>
           <DashHome></DashHome>
         </PrivateRoute>
       }
       ,
-      
+
       {
         path: 'update-profile',
         Component: UpdateProfile
       }
-      ,{
+      , {
         path: 'add-post',
         Component: AddPost
       }
-      ,{
+      , {
         path: 'my-posts',
         Component: MyPost
       }
@@ -96,49 +96,54 @@ export const router = createBrowserRouter([
 
       {
         path: 'admin-profile',
-        element: 
-        
-        <AdminRoute>
-          <AdminProfile></AdminProfile>
-        </AdminRoute>
-        
+        element:
+
+          <AdminRoute>
+            <AdminProfile></AdminProfile>
+          </AdminRoute>
+
       },
       {
         path: 'manage-users',
-        element: 
-        
-       <AdminRoute>
-         <ManageUser></ManageUser>
-       </AdminRoute>
-        
+        element:
+
+          <AdminRoute>
+            <ManageUser></ManageUser>
+          </AdminRoute>
+
       },
       {
         path: 'reported-activities',
-        element: 
-        
-       <AdminRoute>
-        <ReportActivity></ReportActivity>
-       </AdminRoute>
-        
+        element: <PrivateRoute>
+          <AdminRoute>
+            <ReportActivity></ReportActivity>
+          </AdminRoute>
+
+        </PrivateRoute>
+
+
+
       },
       {
         path: 'make-announcement',
-        element: 
-        
-       <AdminRoute>
-       <Announcement></Announcement>
-       </AdminRoute>
-        
+        element:
+
+          <PrivateRoute>
+            <AdminRoute>
+              <Announcement></Announcement>
+            </AdminRoute>
+          </PrivateRoute>
+
       },
       {
         path: 'post/:postId/comments',
-        element: 
-       <PostComments></PostComments>        
+        element:
+          <PostComments></PostComments>
       },
       {
         path: 'post/:postId',
-        element: 
-       <PostDetails></PostDetails>     
+        element:
+          <PostDetails></PostDetails>
       }
 
 

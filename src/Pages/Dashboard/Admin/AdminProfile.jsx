@@ -1,3 +1,4 @@
+// AdminProfile.jsx
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, BarChart, Bar } from 'recharts';
@@ -9,21 +10,21 @@ import useAxiosSecure from '../../../Hooks/useAxiosSecure';
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A4DE6C', '#D0ED57', '#8884D8'];
 
 const tagOptions = [
-    { value: 'technology', label: 'Technology' },
-    { value: 'lifestyle', label: 'Lifestyle' },
-    { value: 'education', label: 'Education' },
-    { value: 'health', label: 'Health' },
-    { value: 'business', label: 'Business' },
-    { value: 'travel', label: 'Travel' },
-    { value: 'food', label: 'Food' },
-    { value: 'sports', label: 'Sports' },
-    { value: 'entertainment', label: 'Entertainment' },
-    { value: 'science', label: 'Science' },
-    { value: 'finance', label: 'Finance' },
-    { value: 'politics', label: 'Politics' },
-    { value: 'environment', label: 'Environment' },
-    { value: 'art', label: 'Art' },
-    { value: 'history', label: 'History' },
+  { value: 'technology', label: 'Technology' },
+  { value: 'lifestyle', label: 'Lifestyle' },
+  { value: 'education', label: 'Education' },
+  { value: 'health', label: 'Health' },
+  { value: 'business', label: 'Business' },
+  { value: 'travel', label: 'Travel' },
+  { value: 'food', label: 'Food' },
+  { value: 'sports', label: 'Sports' },
+  { value: 'entertainment', label: 'Entertainment' },
+  { value: 'science', label: 'Science' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'politics', label: 'Politics' },
+  { value: 'environment', label: 'Environment' },
+  { value: 'art', label: 'Art' },
+  { value: 'history', label: 'History' },
 ];
 
 const AdminProfile = () => {
@@ -83,10 +84,19 @@ const AdminProfile = () => {
   });
 
   const onSubmit = (data) => {
-    addTagMutation.mutate({ name: data.tagName });
+    const tagName = data.tagName.trim().toLowerCase();
+    if (existingTags.includes(tagName)) {
+      toast.error('Tag already exists');
+      return;
+    }
+    addTagMutation.mutate({ name: tagName });
   };
 
   const handleAddSuggestedTag = (tagValue) => {
+    if (existingTags.includes(tagValue.toLowerCase())) {
+      toast.error('Tag already exists');
+      return;
+    }
     addTagMutation.mutate({ name: tagValue });
   };
 
@@ -104,34 +114,34 @@ const AdminProfile = () => {
 
   // Pie data
   const pieData = [
-    { name: 'Posts', value: adminData.totalPosts },
-    { name: 'Comments', value: adminData.totalComments },
-    { name: 'Users', value: adminData.totalUsers },
+    { name: 'Posts', value: adminData.totalPosts || 0 },
+    { name: 'Comments', value: adminData.totalComments || 0 },
+    { name: 'Users', value: adminData.totalUsers || 0 },
   ];
 
   // Bar data for site-wide stats
   const barData = [
-    { name: 'Users', value: adminData.totalUsers },
-    { name: 'Posts', value: adminData.totalPosts },
-    { name: 'Comments', value: adminData.totalComments },
-    { name: 'Likes', value: adminData.totalUpVotes },
-    { name: 'Dislikes', value: adminData.totalDownVotes },
-    { name: 'Reports', value: adminData.totalReports },
-    { name: 'Notifications', value: adminData.totalNotifications },
+    { name: 'Users', value: adminData.totalUsers || 0 },
+    { name: 'Posts', value: adminData.totalPosts || 0 },
+    { name: 'Comments', value: adminData.totalComments || 0 },
+    { name: 'Likes', value: adminData.totalUpVotes || 0 },
+    { name: 'Dislikes', value: adminData.totalDownVotes || 0 },
+    { name: 'Reports', value: adminData.totalReports || 0 },
+    { name: 'Notifications', value: adminData.totalNotifications || 0 },
   ];
 
   // Prepare line chart data
   const recentActivity = adminData.recentActivity || { posts: [], users: [], comments: [] };
   const allDates = [...new Set([
-    ...recentActivity.posts.map(p => p.date),
-    ...recentActivity.users.map(u => u.date),
-    ...recentActivity.comments.map(c => c.date)
+    ...(recentActivity.posts || []).map(p => p.date),
+    ...(recentActivity.users || []).map(u => u.date),
+    ...(recentActivity.comments || []).map(c => c.date)
   ])].sort();
   const lineData = allDates.map(date => ({
     date,
-    posts: recentActivity.posts.find(p => p.date === date)?.posts || 0,
-    users: recentActivity.users.find(u => u.date === date)?.users || 0,
-    comments: recentActivity.comments.find(c => c.date === date)?.comments || 0,
+    posts: (recentActivity.posts || []).find(p => p.date === date)?.posts || 0,
+    users: (recentActivity.users || []).find(u => u.date === date)?.users || 0, // Fixed: u.date instead of p.date
+    comments: (recentActivity.comments || []).find(c => c.date === date)?.comments || 0,
   }));
 
   // Suggested tags not yet added
@@ -219,11 +229,11 @@ const AdminProfile = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">My Posts</p>
-                <p className="text-3xl text-blue-600 font-bold">{adminData.posts}</p>
+                <p className="text-3xl text-blue-600 font-bold">{adminData.posts || 0}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">My Comments</p>
-                <p className="text-3xl text-blue-600 font-bold">{adminData.comments}</p>
+                <p className="text-3xl text-blue-600 font-bold">{adminData.comments || 0}</p>
               </div>
             </div>
           </div>
@@ -234,43 +244,43 @@ const AdminProfile = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">Total Users</p>
-                <p className="text-3xl text-green-600 font-bold">{adminData.totalUsers}</p>
+                <p className="text-3xl text-green-600 font-bold">{adminData.totalUsers || 0}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">Total Posts</p>
-                <p className="text-3xl text-green-600 font-bold">{adminData.totalPosts}</p>
+                <p className="text-3xl text-green-600 font-bold">{adminData.totalPosts || 0}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">Total Comments</p>
-                <p className="text-3xl text-green-600 font-bold">{adminData.totalComments}</p>
+                <p className="text-3xl text-green-600 font-bold">{adminData.totalComments || 0}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">Total Likes</p>
-                <p className="text-3xl text-green-600 font-bold">{adminData.totalUpVotes}</p>
+                <p className="text-3xl text-green-600 font-bold">{adminData.totalUpVotes || 0}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">Total Dislikes</p>
-                <p className="text-3xl text-green-600 font-bold">{adminData.totalDownVotes}</p>
+                <p className="text-3xl text-green-600 font-bold">{adminData.totalDownVotes || 0}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">Total Reports</p>
-                <p className="text-3xl text-green-600 font-bold">{adminData.totalReports}</p>
+                <p className="text-3xl text-green-600 font-bold">{adminData.totalReports || 0}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">Total Notifications</p>
-                <p className="text-3xl text-green-600 font-bold">{adminData.totalNotifications}</p>
+                <p className="text-3xl text-green-600 font-bold">{adminData.totalNotifications || 0}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">Total Announcements</p>
-                <p className="text-3xl text-green-600 font-bold">{adminData.totalAnnouncements}</p>
+                <p className="text-3xl text-green-600 font-bold">{adminData.totalAnnouncements || 0}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">Total Admins</p>
-                <p className="text-3xl text-green-600 font-bold">{adminData.totalAdmins}</p>
+                <p className="text-3xl text-green-600 font-bold">{adminData.totalAdmins || 0}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow text-center transform hover:scale-105 transition-transform">
                 <p className="font-bold text-gray-700">Total Premium Users</p>
-                <p className="text-3xl text-green-600 font-bold">{adminData.totalPremium}</p>
+                <p className="text-3xl text-green-600 font-bold">{adminData.totalPremium || 0}</p>
               </div>
             </div>
           </div>
@@ -306,37 +316,48 @@ const AdminProfile = () => {
           {/* Suggested Tags Section */}
           <div className="mb-8">
             <h3 className="text-lg font-medium mb-3 text-center text-indigo-700">Suggested Tags (Click to Add)</h3>
-            <div className="flex flex-wrap justify-center gap-3">
-              {tagOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => handleAddSuggestedTag(opt.value)}
-                  className={`px-4 py-2 rounded-full transition-colors ${
-                    existingTags.includes(opt.value.toLowerCase())
-                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      : 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
-                  }`}
-                  disabled={addTagMutation.isLoading || existingTags.includes(opt.value.toLowerCase())}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            {suggestedTags.length === 0 ? (
+              <p className="text-center text-gray-600">No suggested tags available.</p>
+            ) : (
+              <div className="flex flex-wrap justify-center gap-3">
+                {suggestedTags.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleAddSuggestedTag(opt.value)}
+                    className={`px-4 py-2 rounded-full transition-colors ${
+                      existingTags.includes(opt.value.toLowerCase())
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
+                    }`}
+                    disabled={addTagMutation.isLoading || existingTags.includes(opt.value.toLowerCase())}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           
           {/* Custom Tag Form */}
           <h3 className="text-lg font-medium mb-3 text-center text-indigo-700">Add Custom Tag</h3>
           <form onSubmit={handleSubmit(onSubmit)} className="flex gap-4 justify-center">
             <input
-              {...register('tagName', { required: true })}
+              {...register('tagName', { 
+                required: 'Tag name is required',
+                validate: value => !existingTags.includes(value.trim().toLowerCase()) || 'Tag already exists'
+              })}
               placeholder="Enter custom tag name"
               className="flex-1 max-w-md p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            <button type="submit" className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" disabled={addTagMutation.isLoading}>
+            <button 
+              type="submit" 
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" 
+              disabled={addTagMutation.isLoading}
+            >
               {addTagMutation.isLoading ? 'Adding...' : 'Add Custom Tag'}
             </button>
           </form>
-          {errors.tagName && <p className="text-red-500 mt-2 text-center">Tag name is required</p>}
+          {errors.tagName && <p className="text-red-500 mt-2 text-center">{errors.tagName.message}</p>}
         </div>
       </div>
     </div>
