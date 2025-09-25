@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import useAxiosSecure from '../../Hooks/useAxiosSecure';
 import AllUserPost from './AllUserPost';
+import TagCom from './tags/TagCom';
 
 const MiddleCom = () => {
   const axiosSecure = useAxiosSecure();
   const [sort, setSort] = useState('newest'); // Default sorting: newest
   const [page, setPage] = useState(1); // Current page
   const limit = 5; // Posts per page
+ 
 
   // Fetch total post count for pagination
   const { data: totalCount = { count: 0 } } = useQuery({
@@ -59,7 +61,9 @@ const MiddleCom = () => {
   };
 
   return (
+    
     <div className="container mx-auto px-4 py-8">
+      <TagCom ></TagCom>
       {/* Sorting Controls */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-4">
@@ -108,7 +112,10 @@ const MiddleCom = () => {
           </div>
         ) : posts.length > 0 ? (
           posts.map((userPost) => (
-            <AllUserPost key={userPost._id} userPost={userPost} />
+
+
+
+            <AllUserPost  key={userPost._id} userPost={userPost} />
           ))
         ) : (
           <div className="min-h-64 flex items-center justify-center rounded-2xl shadow-xl">

@@ -181,15 +181,7 @@ const Navbar = () => {
           </ul>
         </div>
         <div className="navbar-end flex items-center gap-4">
-          <div className="flex items-center">
-            <div className="join">
-              <label className="input join-item flex items-center gap-2 border-gray-300">
-                <CiSearch className="text-gray-500" size={20} />
-                <input type="text" placeholder="Search" className="focus:outline-none" />
-              </label>
-              <button className="btn bg-primary text-white join-item hover:bg-primary-dark">Search</button>
-            </div>
-          </div>
+         
           <div className="relative cursor-pointer" title="Notifications">
             <IoIosNotifications
               className="text-primary hover:text-primary-dark transition-colors"

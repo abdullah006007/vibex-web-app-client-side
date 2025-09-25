@@ -14,10 +14,12 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     const { displayName, photoURL, email } = user || {};
     const axiosSecure = useAxiosSecure();
     const queryClient = useQueryClient();
+     const [isModalOpen, setIsModalOpen] = useState(false);
+    
 
 
     // State for modal, comment input, reply input, and comment sorting
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    // const [isModalOpen, setIsModalOpen] = useState(false);
     const [commentText, setCommentText] = useState('');
     const [replyText, setReplyText] = useState('');
     const [replyToCommentId, setReplyToCommentId] = useState(null);

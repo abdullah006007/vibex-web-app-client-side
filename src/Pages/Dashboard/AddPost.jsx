@@ -35,24 +35,18 @@ const AddPost = () => {
     const [error, setError] = useState(null);
     const cropperRef = useRef(null);
 
-    // Tag options for react-select
-    const tagOptions = [
-        { value: 'technology', label: 'Technology' },
-        { value: 'lifestyle', label: 'Lifestyle' },
-        { value: 'education', label: 'Education' },
-        { value: 'health', label: 'Health' },
-        { value: 'business', label: 'Business' },
-        { value: 'travel', label: 'Travel' },
-        { value: 'food', label: 'Food' },
-        { value: 'sports', label: 'Sports' },
-        { value: 'entertainment', label: 'Entertainment' },
-        { value: 'science', label: 'Science' },
-        { value: 'finance', label: 'Finance' },
-        { value: 'politics', label: 'Politics' },
-        { value: 'environment', label: 'Environment' },
-        { value: 'art', label: 'Art' },
-        { value: 'history', label: 'History' },
-    ];
+    // Fetch available tags from API
+    const { data: tagOptions = [], isLoading: tagsLoading } = useQuery({
+        queryKey: ['tags'],
+        queryFn: async () => {
+            const response = await axiosSecure.get('/tags');
+            // Transform API response to react-select format
+            return response.data.map(tag => ({
+                value: tag.toLowerCase(),
+                label: tag.charAt(0).toUpperCase() + tag.slice(1)
+            }));
+        },
+    });
 
     // Fetch user's post count
     useEffect(() => {
@@ -223,8 +217,8 @@ const AddPost = () => {
         e.target.src = 'https://via.placeholder.com/150?text=Error'; // Fallback for invalid image URLs
     };
 
-    // Show loading state while fetching post count or subscription
-    if (postCount === null || roleLoading || authLoading) {
+    // Show loading state while fetching post count, subscription, or tags
+    if (postCount === null || roleLoading || authLoading || tagsLoading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
                 <p className="text-gray-600 text-lg">Loading...</p>
@@ -377,6 +371,7 @@ const AddPost = () => {
                             className="w-full"
                             placeholder="Select a tag"
                             isClearable
+                            isLoading={tagsLoading}
                             required
                         />
                     </div>

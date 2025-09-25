@@ -20,6 +20,7 @@ import Announcement from "../Pages/Dashboard/Admin/Announcement";
 import PostComments from "../Pages/Dashboard/PostComments";
 import PostDetails from "../Pages/Dashboard/PostDetails";
 import Membership from "../Pages/Merbership/Membership";
+import JoinUs from "../Pages/JoinUs/JoinUs";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
         {
             index: true,
             Component : Home
+        }
+        ,{
+          path: 'join-us',
+          Component : JoinUs
         }
         ,{
           path: 'membership',
