@@ -8,7 +8,7 @@ import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
 import Modal from 'react-modal';
 
-Modal.setAppElement('#root'); /
+Modal.setAppElement('#root'); 
 
 const UpdateProfile = () => {
     const { user, updateUserProfile } = useAuth();

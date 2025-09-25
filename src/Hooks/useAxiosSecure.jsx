@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import useAuth from './useAuth';
 
 const axiosSecure = axios.create({
-  baseURL: 'http://localhost:3000', // Confirmed correct port
+  baseURL: 'https://server-side-iota-five.vercel.app', // Confirmed correct port
 });
 
 const useAxiosSecure = () => {

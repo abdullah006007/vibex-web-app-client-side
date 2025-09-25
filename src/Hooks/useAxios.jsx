@@ -3,7 +3,7 @@ import React from 'react';
 
 
 const axiosInstance = axios.create({
-    baseURL: `http://localhost:3000`
+    baseURL: `https://server-side-iota-five.vercel.app`
 })
 
 const useAxios = () => {
