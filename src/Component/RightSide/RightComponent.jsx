@@ -58,7 +58,7 @@ const RightComponent = () => {
   const displayedNotifications = showAll ? notifications : notifications.slice(0, 6);
 
   return (
-    <div className="w-80 bg-gray-50 p-4 rounded-lg shadow space-y-6">
+    <div className="md:w-80 bg-gray-50 p-4 rounded-lg hidden md:block shadow space-y-6">
       <FindConnection></FindConnection>
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Announcements</h2>

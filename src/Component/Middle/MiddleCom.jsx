@@ -59,15 +59,18 @@ const MiddleCom = () => {
   // Generate pagination buttons with ellipsis
   const getPaginationButtons = () => {
     const buttons = [];
-    const maxButtons = 5; // Show up to 5 page buttons at a time
-    const halfMaxButtons = Math.floor(maxButtons / 2);
+    const maxButtons = 5; // Show up to 5 page buttons on desktop, 3 on mobile
+    const maxButtonsMobile = 3;
+    const isMobile = window.innerWidth < 640; // Tailwind's 'sm' breakpoint
+    const effectiveMaxButtons = isMobile ? maxButtonsMobile : maxButtons;
+    const halfMaxButtons = Math.floor(effectiveMaxButtons / 2);
 
     let startPage = Math.max(1, page - halfMaxButtons);
-    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    let endPage = Math.min(totalPages, startPage + effectiveMaxButtons - 1);
 
     // Adjust startPage if endPage is at totalPages
     if (endPage === totalPages) {
-      startPage = Math.max(1, totalPages - maxButtons + 1);
+      startPage = Math.max(1, totalPages - effectiveMaxButtons + 1);
     }
 
     // Add first page
@@ -75,7 +78,7 @@ const MiddleCom = () => {
       buttons.push(
         <button
           key={1}
-          className={`join-item btn ${page === 1 ? 'btn-active' : ''}`}
+          className={`join-item btn btn-sm sm:btn-md ${page === 1 ? 'btn-active' : ''}`}
           onClick={() => handlePageClick(1)}
         >
           1
@@ -86,7 +89,7 @@ const MiddleCom = () => {
     // Add ellipsis after first page if needed
     if (startPage > 2) {
       buttons.push(
-        <button key="start-ellipsis" className="join-item btn btn-disabled">
+        <button key="start-ellipsis" className="join-item btn btn-sm sm:btn-md btn-disabled">
           ...
         </button>
       );
@@ -97,7 +100,7 @@ const MiddleCom = () => {
       buttons.push(
         <button
           key={i}
-          className={`join-item btn ${page === i ? 'btn-active' : ''}`}
+          className={`join-item btn btn-sm sm:btn-md ${page === i ? 'btn-active' : ''}`}
           onClick={() => handlePageClick(i)}
         >
           {i}
@@ -108,7 +111,7 @@ const MiddleCom = () => {
     // Add ellipsis before last page if needed
     if (endPage < totalPages - 1) {
       buttons.push(
-        <button key="end-ellipsis" className="join-item btn btn-disabled">
+        <button key="end-ellipsis" className="join-item btn btn-sm sm:btn-md btn-disabled">
           ...
         </button>
       );
@@ -119,7 +122,7 @@ const MiddleCom = () => {
       buttons.push(
         <button
           key={totalPages}
-          className={`join-item btn ${page === totalPages ? 'btn-active' : ''}`}
+          className={`join-item btn btn-sm sm:btn-md ${page === totalPages ? 'btn-active' : ''}`}
           onClick={() => handlePageClick(totalPages)}
         >
           {totalPages}
@@ -131,17 +134,17 @@ const MiddleCom = () => {
   };
 
   return (
-    <div className="container mx-auto px-4">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       <TagCom />
       {/* Sorting Controls */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <button
             onClick={() => {
               setSort('newest');
               setPage(1); // Reset to first page when changing sort
             }}
-            className={`px-4 py-2 rounded-lg transition-colors duration-300 ${
+            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-colors duration-300 ${
               sort === 'newest' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
@@ -152,7 +155,7 @@ const MiddleCom = () => {
               setSort('popular');
               setPage(1); // Reset to first page when changing sort
             }}
-            className={`px-4 py-2 rounded-lg transition-colors duration-300 ${
+            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-colors duration-300 ${
               sort === 'popular' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
@@ -162,19 +165,19 @@ const MiddleCom = () => {
       </div>
 
       {/* Posts List */}
-      <div className="mt-8 space-y-6">
+      <div className="mt-6 sm:mt-8 space-y-4 sm:space-y-6">
         {isPending ? (
-          <div className="min-h-64 flex items-center justify-center rounded-2xl shadow-xl animate-pulse">
-            <p className="text-gray-700 text-xl font-semibold">Loading posts...</p>
+          <div className="min-h-[16rem] flex items-center justify-center rounded-2xl shadow-md bg-gray-50 p-4 sm:p-6 animate-pulse">
+            <p className="text-gray-700 text-base sm:text-lg font-semibold">Loading posts...</p>
           </div>
         ) : error ? (
-          <div className="min-h-64 flex flex-col items-center justify-center rounded-2xl shadow-xl p-6 bg-red-50">
-            <p className="text-red-700 text-xl font-semibold mb-4">
+          <div className="min-h-[16rem] flex flex-col items-center justify-center rounded-2xl shadow-md p-4 sm:p-6 bg-red-50">
+            <p className="text-red-700 text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-center">
               {error.message || 'Failed to load posts. Please try again.'}
             </p>
             <button
               onClick={() => refetch()}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm sm:text-base"
             >
               Retry
             </button>
@@ -184,24 +187,24 @@ const MiddleCom = () => {
             <AllUserPost key={userPost._id} userPost={userPost} isPending={isPending} error={error} />
           ))
         ) : (
-          <div className="min-h-64 flex items-center justify-center rounded-2xl shadow-xl">
-            <p className="text-gray-700 text-xl font-semibold text-center">
-              No posts available. <br /> Create one to get started!
+          <div className="min-h-[16rem] flex items-center justify-center rounded-2xl shadow-md bg-gray-50 p-4 sm:p-6">
+            <p className="text-gray-700 text-base sm:text-lg font-semibold text-center">
+              No posts available. <br className="sm:hidden" /> Create one to get started!
             </p>
           </div>
         )}
       </div>
 
       {/* Pagination Controls */}
-      <div className="mt-8 flex justify-center items-center gap-2 join">
+      <div className="mt-6 sm:mt-8 flex flex-wrap justify-center items-center gap-2 sm:gap-3 join">
         {isPending ? (
-          <p className="text-gray-700">Loading pagination...</p>
+          <p className="text-gray-700 text-sm sm:text-base">Loading pagination...</p>
         ) : error ? (
-          <p className="text-red-700">Error loading pagination</p>
+          <p className="text-red-700 text-sm sm:text-base">Error loading pagination</p>
         ) : totalPages > 1 ? (
           <>
             <button
-              className="join-item btn btn-primary"
+              className="join-item btn btn-primary btn-sm sm:btn-md"
               onClick={handlePreviousPage}
               disabled={page === 1}
             >
@@ -209,7 +212,7 @@ const MiddleCom = () => {
             </button>
             {getPaginationButtons()}
             <button
-              className="join-item btn btn-primary"
+              className="join-item btn btn-primary btn-sm sm:btn-md"
               onClick={handleNextPage}
               disabled={page === totalPages}
             >
@@ -217,7 +220,7 @@ const MiddleCom = () => {
             </button>
           </>
         ) : (
-          <p className="text-gray-700">No additional pages available.</p>
+          <p className="text-gray-700 text-sm sm:text-base">No additional pages available.</p>
         )}
       </div>
     </div>

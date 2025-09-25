@@ -8,8 +8,11 @@ const Home = () => {
     
     
     return (
-        <div className='flex justify-around bg-buttonBg'>
-            <section className='w-1/4 '>
+        <div className='md:flex md:justify-around bg-buttonBg'>
+
+
+
+            <section className='w-1/4 hidden md:block'>
             <LeftSide></LeftSide>
                 
             </section>
@@ -18,14 +21,14 @@ const Home = () => {
 
             {/* middle section */}
 
-            <section className='w-3/6'>
+            <section className='md:w-3/6'>
             <MiddleCom></MiddleCom>
 
             </section>
 
 
 
-            <section className='w-1/5 '>
+            <section className='w-1/5  hidden md:block'>
             <RightComponent></RightComponent>
 
             </section>

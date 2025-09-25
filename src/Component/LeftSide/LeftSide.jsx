@@ -44,7 +44,7 @@ const LeftSide = () => {
     });
 
     return (
-        <div className="w-full max-w-xs bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6 rounded-2xl shadow-xl border border-purple-100/50 min-h-screen">
+        <div className="w-full max-w-xs hidden md:block bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6 rounded-2xl shadow-xl border border-purple-100/50 min-h-screen">
             <style>
                 {`
           @keyframes fadeIn {
