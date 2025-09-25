@@ -4,6 +4,7 @@ import useAxiosSecure from "../../Hooks/useAxiosSecure";
 import useAuth from "../../Hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import FindConnection from "./FindConnection";
 
 const RightComponent = () => {
   const axiosSecure = useAxiosSecure();
@@ -58,6 +59,7 @@ const RightComponent = () => {
 
   return (
     <div className="w-80 bg-gray-50 p-4 rounded-lg shadow space-y-6">
+      <FindConnection></FindConnection>
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Announcements</h2>
 

@@ -29,7 +29,7 @@ const UpdateProfile = () => {
             try {
                 setFetchingUserData(true);
                 const response = await axiosSecure.get(`/users/role/${user?.email}`);
-                console.log('User role data:', response.data); // Debug role data
+                console.log('User role data:', response.data);
 
                 // Set profile picture with priority: API data -> Firebase user -> placeholder
                 const apiPhotoURL = response.data.photoURL;
@@ -40,11 +40,13 @@ const UpdateProfile = () => {
                 setValue('name', response.data.name || user?.displayName || '');
                 setValue('phone', response.data.phone || '');
                 setValue('address', response.data.address || '');
+                setValue('bio', response.data.bio || '');
             } catch (error) {
                 console.error('Error fetching user data:', error);
                 // Fallback to Firebase user data
                 setProfilePic(user?.photoURL || '');
                 setValue('name', user?.displayName || '');
+                setValue('bio', '');
                 toast.error('Could not load profile data. Using cached information.');
             } finally {
                 setFetchingUserData(false);
@@ -161,31 +163,33 @@ const UpdateProfile = () => {
         try {
             // Update Firebase profile if name or photo changed
             if (data.name !== user.displayName || profilePic !== user.photoURL) {
+                console.log('Updating Firebase profile:', { displayName: data.name, photoURL: profilePic });
                 await updateUserProfile({
                     displayName: data.name,
-                    photoURL: profilePic || 'https://via.placeholder.com/150?text=User' // Fallback URL
+                    photoURL: profilePic || 'https://placehold.co/150?text=User'
                 });
             }
 
             // Update MongoDB user data
+            const updates = {
+                name: data.name,
+                phone: data.phone || null,
+                address: data.address || null,
+                bio: data.bio || null,
+                photoURL: profilePic || null
+            };
+            console.log('Sending update to MongoDB:', { email: user.email, updates });
             const response = await axiosSecure.put('/users/update', {
                 email: user.email,
-                updates: {
-                    name: data.name,
-                    phone: data.phone || null,
-                    address: data.address || null,
-                    photoURL: profilePic || null
-                }
+                updates
             });
 
-            if (response.data.success) {
-                toast.success('Profile updated successfully');
-            } else {
-                toast.error(response.data.message || 'Failed to update profile');
-            }
+            console.log('MongoDB update response:', response.data);
+            toast.success('Profile updated successfully');
         } catch (error) {
             console.error('Update error:', error);
-            toast.error(error.response?.data?.message || 'Failed to update profile');
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to update profile';
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -199,9 +203,9 @@ const UpdateProfile = () => {
 
     if (fetchingUserData) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading your profile...</p>
                 </div>
             </div>
@@ -209,7 +213,7 @@ const UpdateProfile = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-lg p-8">
                 <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Update Profile</h2>
 
@@ -217,7 +221,7 @@ const UpdateProfile = () => {
                     {/* Profile Picture */}
                     <div className="flex flex-col items-center">
                         <div className="relative mb-4">
-                            <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-gray-200 shadow-md flex items-center justify-center bg-gray-100">
+                            <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-purple-100 shadow-md flex items-center justify-center bg-gray-100">
                                 {profilePic ? (
                                     <>
                                         <img
@@ -238,7 +242,7 @@ const UpdateProfile = () => {
                                 )}
                             </div>
                             <div className="absolute bottom-0 right-0 flex gap-2">
-                                <label className="bg-blue-600 text-white p-3 rounded-full cursor-pointer hover:bg-blue-700 transition-colors shadow-md">
+                                <label className="bg-indigo-600 text-white p-3 rounded-full cursor-pointer hover:bg-indigo-700 transition-colors shadow-md">
                                     <input
                                         type="file"
                                         accept="image/jpeg,image/png,image/gif"
@@ -267,7 +271,7 @@ const UpdateProfile = () => {
                         {imageUploading && (
                             <div className="w-full max-w-xs bg-gray-200 rounded-full h-2.5 mt-2">
                                 <div
-                                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                                    className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
                                     style={{ width: `${uploadProgress}%` }}
                                 ></div>
                                 <p className="text-center text-sm text-gray-600 mt-1">
@@ -289,11 +293,27 @@ const UpdateProfile = () => {
                                 required: 'Name is required',
                                 minLength: { value: 2, message: 'Name must be at least 2 characters' }
                             })}
-                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-colors"
                             placeholder="Enter your full name"
                         />
                         {errors.name && (
                             <p className="text-red-500 text-sm mt-2">{errors.name.message}</p>
+                        )}
+                    </div>
+
+                    {/* Bio */}
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Bio</label>
+                        <textarea
+                            {...register('bio', {
+                                maxLength: { value: 150, message: 'Bio must be 150 characters or less' }
+                            })}
+                            rows={3}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-colors"
+                            placeholder="Write a short bio (max 150 characters)"
+                        />
+                        {errors.bio && (
+                            <p className="text-red-500 text-sm mt-2">{errors.bio.message}</p>
                         )}
                     </div>
 
@@ -319,7 +339,7 @@ const UpdateProfile = () => {
                                     message: 'Enter a valid phone number (e.g., +8801234567890)'
                                 }
                             })}
-                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-colors"
                             placeholder="+8801234567890"
                         />
                         {errors.phone && (
@@ -333,7 +353,7 @@ const UpdateProfile = () => {
                         <textarea
                             {...register('address')}
                             rows={3}
-                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-colors"
                             placeholder="Enter your address"
                         />
                     </div>
@@ -343,7 +363,7 @@ const UpdateProfile = () => {
                         type="submit"
                         disabled={loading || imageUploading}
                         className={`w-full p-3 rounded-lg text-white font-semibold transition-colors duration-300 ${
-                            loading || imageUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                            loading || imageUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
                         }`}
                     >
                         {loading ? 'Updating Profile...' : imageUploading ? 'Uploading Image...' : 'Update Profile'}
@@ -389,7 +409,7 @@ const UpdateProfile = () => {
                     </button>
                     <button
                         onClick={handleCropAndUpload}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
                         disabled={imageUploading}
                     >
                         <FaCropAlt className="mr-2" />

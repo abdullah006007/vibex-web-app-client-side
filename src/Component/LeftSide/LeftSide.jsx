@@ -12,10 +12,10 @@ const LeftSide = () => {
   const uid = user?.uid;
 
   // Fetch user role and badge
-  const { data: userInfo = { subscription: "free", Badge: "Bronze", role: "user" }, isLoading: userLoading } = useQuery({
+  const { data: userInfo = { subscription: "free", Badge: "Bronze", role: "user", bio: "" }, isLoading: userLoading } = useQuery({
     queryKey: ["userRole", normalizedEmail],
     queryFn: async () => {
-      if (!normalizedEmail) return { subscription: "free", Badge: "Bronze", role: "user" };
+      if (!normalizedEmail) return { subscription: "free", Badge: "Bronze", role: "user", bio: "" };
       const res = await axiosSecure.get(`/users/role/${normalizedEmail}`);
       return res.data;
     },
@@ -88,6 +88,9 @@ const LeftSide = () => {
                 </p>
                 <p className="text-xs text-gray-500 italic mt-1">
                   {userInfo.role === "admin" ? "Community Admin" : "Passionate Developer"}
+                </p>
+                <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                  {userInfo.bio ? userInfo.bio : "No bio set. Update your profile to add one!"}
                 </p>
               </div>
             </div>
