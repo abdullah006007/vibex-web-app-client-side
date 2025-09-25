@@ -22,9 +22,9 @@ const PostComments = () => {
   const { data: post, isLoading, isError, error } = useQuery({
     queryKey: ['post', postId],
     queryFn: async () => {
-      console.log(`PostComments: Fetching post with postId: ${postId}`);
+
       const response = await axiosInstance.get(`/user/post/${postId}`);
-      console.log('PostComments: Fetched post:', response.data);
+
       return response.data;
     },
     enabled: !!postId && !!user && !authLoading,
@@ -55,7 +55,7 @@ const PostComments = () => {
   // Report comment mutation
   const reportCommentMutation = useMutation({
     mutationFn: async ({ commentId, feedback }) => {
-      console.log('PostComments: Reporting comment:', { postId, commentId, feedback, reporterEmail: email });
+  
       const response = await axiosInstance.post(`/user/post/${postId}/comment/${commentId}/report`, {
         feedback,
       });

@@ -8,7 +8,7 @@ import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
 import Modal from 'react-modal';
 
-Modal.setAppElement('#root'); // Set the app element for accessibility
+Modal.setAppElement('#root'); /
 
 const UpdateProfile = () => {
     const { user, updateUserProfile } = useAuth();
@@ -23,27 +23,26 @@ const UpdateProfile = () => {
     const [fetchingUserData, setFetchingUserData] = useState(true);
     const cropperRef = useRef(null);
 
-    // Fetch user data on component mount
+
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 setFetchingUserData(true);
                 const response = await axiosSecure.get(`/users/role/${user?.email}`);
-                console.log('User role data:', response.data);
 
-                // Set profile picture with priority: API data -> Firebase user -> placeholder
+
                 const apiPhotoURL = response.data.photoURL;
                 const firebasePhotoURL = user?.photoURL;
                 setProfilePic(apiPhotoURL || firebasePhotoURL || '');
 
-                // Pre-fill form values
+     
                 setValue('name', response.data.name || user?.displayName || '');
                 setValue('phone', response.data.phone || '');
                 setValue('address', response.data.address || '');
                 setValue('bio', response.data.bio || '');
             } catch (error) {
                 console.error('Error fetching user data:', error);
-                // Fallback to Firebase user data
+             
                 setProfilePic(user?.photoURL || '');
                 setValue('name', user?.displayName || '');
                 setValue('bio', '');
@@ -60,18 +59,18 @@ const UpdateProfile = () => {
         }
     }, [user, axiosSecure, setValue]);
 
-    // Handle file selection for cropping
+
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Validate file size (max 5MB)
+
         if (file.size > 5 * 1024 * 1024) {
             toast.error('Image must be less than 5MB');
             return;
         }
 
-        // Validate file type
+
         const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
         if (!validImageTypes.includes(file.type)) {
             toast.error('Please select a JPEG, PNG, or GIF image');
@@ -82,7 +81,6 @@ const UpdateProfile = () => {
         setCropModalOpen(true);
     };
 
-    // Handle crop and upload
     const handleCropAndUpload = async () => {
         if (!cropperRef.current) {
             toast.error('Failed to initialize cropper');
@@ -151,26 +149,26 @@ const UpdateProfile = () => {
         }, 'image/jpeg');
     };
 
-    // Handle delete photo
+
     const handleDeletePhoto = () => {
         setProfilePic('');
         toast.success('Profile picture removed');
     };
 
-    // Handle form submission
+
     const onSubmit = async (data) => {
         setLoading(true);
         try {
-            // Update Firebase profile if name or photo changed
+ 
             if (data.name !== user.displayName || profilePic !== user.photoURL) {
-                console.log('Updating Firebase profile:', { displayName: data.name, photoURL: profilePic });
+       
                 await updateUserProfile({
                     displayName: data.name,
                     photoURL: profilePic || 'https://placehold.co/150?text=User'
                 });
             }
 
-            // Update MongoDB user data
+          
             const updates = {
                 name: data.name,
                 phone: data.phone || null,
@@ -178,7 +176,7 @@ const UpdateProfile = () => {
                 bio: data.bio || null,
                 photoURL: profilePic || null
             };
-            console.log('Sending update to MongoDB:', { email: user.email, updates });
+     
             const response = await axiosSecure.put('/users/update', {
                 email: user.email,
                 updates
