@@ -13,34 +13,34 @@ const MyPost = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Fetch post count
+
   const { data: postCount = { count: 0 }, isLoading: isLoadingCount, error: countError } = useQuery({
     queryKey: ['postCount', uid],
     queryFn: async () => {
       if (!uid) throw new Error('User not authenticated');
       const response = await axiosInstance.get(`/user/post/count/${uid}`);
-      console.log(`Fetched post count for user ${uid}:`, response.data);
+
       return response.data;
     },
     enabled: !!uid,
   });
 
-  // Fetch posts
+
   const { data: posts = [], isLoading: isLoadingPosts, error: postsError } = useQuery({
     queryKey: ['posts', uid],
     queryFn: async () => {
       if (!uid) throw new Error('User not authenticated');
       const response = await axiosInstance.get(`/user/posts/${uid}`);
-      console.log(`Fetched ${response.data.length} posts for user ${uid}`);
+ 
       return response.data;
     },
     enabled: !!uid,
   });
 
-  // Delete post mutation
+
   const deletePostMutation = useMutation({
     mutationFn: async (postId) => {
-      console.log('Deleting post:', { postId, userId: uid });
+  
       const response = await axiosInstance.delete(`/user/post/${postId}?userId=${uid}`);
       return response.data;
     },
@@ -57,25 +57,23 @@ const MyPost = () => {
     },
   });
 
-  // Handle delete post
   const handleDelete = (postId) => {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
     deletePostMutation.mutate(postId);
   };
 
-  // Handle comment navigation
+
   const handleComment = (postId) => {
-    console.log('Navigating to comments for postId:', postId);
+ 
     navigate(`/dashboard/post/${postId}/comments`);
   };
 
-  // Handle view post navigation
+
   const handleViewPost = (postId) => {
-    console.log('Navigating to post details for postId:', postId);
+ 
     navigate(`/dashboard/post/${postId}`);
   };
 
-  // Render loading state
   if (isLoadingCount || isLoadingPosts) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
@@ -84,7 +82,7 @@ const MyPost = () => {
     );
   }
 
-  // Render error state
+
   if (countError || postsError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">

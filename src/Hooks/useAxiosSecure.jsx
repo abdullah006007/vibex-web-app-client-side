@@ -27,10 +27,7 @@ const useAxiosSecure = () => {
               now < tokenCache.current.expiry
             ) {
               config.headers.Authorization = `Bearer ${tokenCache.current.token}`;
-              console.log('useAxiosSecure: Using cached token', {
-                url: config.url,
-                token: tokenCache.current.token.substring(0, 10) + '...',
-              });
+             
               return config;
             }
 
@@ -42,10 +39,7 @@ const useAxiosSecure = () => {
               const expiry = decodedToken.exp * 1000; // Convert to milliseconds
               tokenCache.current = { token, expiry };
               config.headers.Authorization = `Bearer ${token}`;
-              console.log('useAxiosSecure: Attached new token', {
-                url: config.url,
-                token: token.substring(0, 10) + '...',
-              });
+              
             } else {
               console.error('useAxiosSecure: No token available for user', user.uid);
             }
@@ -75,15 +69,11 @@ const useAxiosSecure = () => {
       (res) => res,
       async (error) => {
         const status = error?.response?.status;
-        console.log('useAxiosSecure: Response interceptor caught error', {
-          status,
-          url: error.config?.url,
-        });
 
         if (status === 403) {
           navigate('/forbidden');
         } else if (status === 401) {
-          console.log('useAxiosSecure: 401 Unauthorized, logging out');
+        
           try {
             await logOut();
             navigate('/login');

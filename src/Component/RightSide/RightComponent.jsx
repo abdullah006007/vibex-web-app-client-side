@@ -15,7 +15,7 @@ const RightComponent = () => {
 
   // Normalize email to match backend
   const normalizedEmail = user?.email?.toLowerCase().trim();
-  console.log(`RightComponent: User email=${normalizedEmail}, loading=${loading}`);
+
 
   // Fetch user-specific notifications
   const { data: notifications = [], isLoading, isError, error } = useQuery({
@@ -25,9 +25,9 @@ const RightComponent = () => {
         console.warn("No email provided for notifications fetch");
         return [];
       }
-      console.log(`Fetching notifications for ${normalizedEmail}`);
+  
       const res = await axiosSecure.get(`/notifications/${normalizedEmail}`);
-      console.log(`Fetched ${res.data.length} notifications`);
+  
       return res.data;
     },
     enabled: !!normalizedEmail && !loading,
@@ -37,11 +37,11 @@ const RightComponent = () => {
   // Mutation to mark notification as read
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId) => {
-      console.log(`Marking notification ${notificationId} as read`);
+      
       return await axiosSecure.patch(`/notifications/${notificationId}/read`);
     },
     onSuccess: () => {
-      console.log("Notification marked as read successfully");
+  
       queryClient.invalidateQueries(["notifications", normalizedEmail]);
       setSelectedAnnouncement(null); // Close modal
       toast.success("Notification marked as read", { position: "top-right" });

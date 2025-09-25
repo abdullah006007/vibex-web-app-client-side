@@ -38,19 +38,18 @@ const CheckoutForm = ({ price, onSuccess }) => {
     }
 
     try {
-      // Log to debug environment variable
-      console.log('Stripe Publishable Key:', import.meta.env.VITE_STRIPE_PK_KEY);
 
-      // Create a payment intent on the backend
+
+
       const { data } = await axiosSecure.post('/create-payment-intent', { price });
-      console.log('Payment Intent Response:', data); // Debug backend response
+   
       const clientSecret = data.clientSecret;
 
       if (!clientSecret) {
         throw new Error('No client secret received from backend.');
       }
 
-      // Confirm the payment with Stripe
+
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: cardElement,
@@ -68,12 +67,12 @@ const CheckoutForm = ({ price, onSuccess }) => {
       }
 
       if (result.paymentIntent.status === 'succeeded') {
-        // Payment successful, notify backend to upgrade subscription
+
         const upgradeResponse = await axiosSecure.post('/user/membership/upgrade', {
           paymentIntentId: result.paymentIntent.id,
-          subscription: 'premium', // Updated to set subscription to premium
+          subscription: 'premium', 
         });
-        console.log('Upgrade Response:', upgradeResponse.data); // Debug upgrade response
+        console.log('Upgrade Response:', upgradeResponse.data); 
         onSuccess();
         alert('Payment successful! You are now a Premium member with a Gold badge.');
       }
@@ -148,7 +147,7 @@ const Membership = () => {
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
 
-  // Fetch user subscription status
+
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['userSubscription', user?.email],
     queryFn: async () => {
@@ -159,23 +158,21 @@ const Membership = () => {
     enabled: !!user && !authLoading,
   });
 
-  // Fetch user post count
-  // Fix the postCount query function
+
   const { data: postCount, isLoading: postCountLoading } = useQuery({
     queryKey: ['postCount', user?.uid],
     queryFn: async () => {
       if (!user) return 0;
       const response = await axiosSecure.get(`/user/post/count/${user.uid}`);
 
-      // Add proper handling for the response
-      console.log('Post count API response:', response.data); // Debug what you're getting
 
-      // If response.data is {count: 5}, extract the count
+
+
       if (response.data && typeof response.data === 'object' && response.data.count !== undefined) {
-        return response.data;; // This returns the number, not the object
+        return response.data;; 
       }
 
-      return 0; // Fallback
+      return 0; 
     },
     enabled: !!user && !authLoading,
   });
@@ -194,7 +191,7 @@ const Membership = () => {
     );
   }
 
-  const price = 10; // Example: $10 for membership (adjust to BDT if needed)
+  const price = 10; 
 
   const handlePaymentSuccess = () => {
     queryClient.invalidateQueries(['userSubscription', user.email]);

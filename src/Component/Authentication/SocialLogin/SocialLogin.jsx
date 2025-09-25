@@ -17,7 +17,7 @@ const SocialLogin = () => {
     const handleSignIn = () => {
         signInWithGoogle()
             .then(async(result) => {
-                console.log(result.user);
+           
                 toast.success('Logged in success')
 
                 const user = result.user;
@@ -28,12 +28,12 @@ const SocialLogin = () => {
                     username: user.displayName ,
                     subscription: 'free',
                     Badge: 'Bronze',
-                    role: 'user', //default role
+                    role: 'user', 
                     created_at: new Date().toISOString(),
                     last_log_in: new Date().toISOString()
 
                 }
-                console.log(user.displayName);
+               
                 const res = await axiosInstance.post('/users', userInfo)
                 console.log( 'user update info', res.data);
 

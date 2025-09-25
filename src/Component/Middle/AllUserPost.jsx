@@ -6,7 +6,7 @@ import { FaArrowUp, FaArrowDown, FaPaperPlane, FaRegComment, FaReply, FaShare } 
 import Modal from 'react-modal';
 import { FacebookShareButton, FacebookIcon } from 'react-share';
 
-// Bind modal to app element for accessibility
+
 Modal.setAppElement('#root');
 
 const AllUserPost = ({ userPost, isPending, error }) => {
@@ -20,14 +20,12 @@ const AllUserPost = ({ userPost, isPending, error }) => {
   const [replyToCommentId, setReplyToCommentId] = useState(null);
   const [commentSort, setCommentSort] = useState('newest');
 
-  // Debug log to inspect userPost prop
-  console.log('UserPost received:', userPost);
+ 
 
-  // Define shareUrl and shareTitle for social sharing
   const shareUrl = window.location.href;
   const shareTitle = userPost?.postTitle || 'Check out this post!';
 
-  // Memoized sorted comments
+
   const sortedComments = useMemo(() => {
     if (!userPost?.comments) return [];
     let comments = [...userPost.comments];
@@ -39,7 +37,7 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     return comments;
   }, [userPost?.comments, commentSort]);
 
-  // Upvote mutation for post
+
   const upvoteMutation = useMutation({
     mutationFn: async (postId) => {
       if (!user) throw new Error('You must be logged in to upvote.');
@@ -55,7 +53,7 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     },
   });
 
-  // Downvote mutation for post
+
   const downvoteMutation = useMutation({
     mutationFn: async (postId) => {
       if (!user) throw new Error('You must be logged in to downvote.');
@@ -71,7 +69,7 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     },
   });
 
-  // Comment upvote mutation
+
   const commentUpvoteMutation = useMutation({
     mutationFn: async ({ postId, commentId }) => {
       if (!user) throw new Error('You must be logged in to upvote.');
@@ -87,7 +85,7 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     },
   });
 
-  // Comment downvote mutation
+
   const commentDownvoteMutation = useMutation({
     mutationFn: async ({ postId, commentId }) => {
       if (!user) throw new Error('You must be logged in to downvote.');
@@ -103,7 +101,7 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     },
   });
 
-  // Comment mutation
+
   const commentMutation = useMutation({
     mutationFn: async ({ postId, comment }) => {
       if (!user) throw new Error('You must be logged in to comment.');
@@ -125,7 +123,7 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     },
   });
 
-  // Reply mutation
+
   const replyMutation = useMutation({
     mutationFn: async ({ postId, commentId, reply }) => {
       if (!user) throw new Error('You must be logged in to reply.');
@@ -148,31 +146,30 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     },
   });
 
-  // Handle post upvote
+
   const handleUpvote = (postId, e) => {
     e.stopPropagation();
     upvoteMutation.mutate(postId);
   };
 
-  // Handle post downvote
+
   const handleDownvote = (postId, e) => {
     e.stopPropagation();
     downvoteMutation.mutate(postId);
   };
 
-  // Handle comment upvote
+
   const handleCommentUpvote = (postId, commentId, e) => {
     e.stopPropagation();
     commentUpvoteMutation.mutate({ postId, commentId });
   };
 
-  // Handle comment downvote
+
   const handleCommentDownvote = (postId, commentId, e) => {
     e.stopPropagation();
     commentDownvoteMutation.mutate({ postId, commentId });
   };
 
-  // Handle comment submission
   const handleCommentSubmit = (e) => {
     e.stopPropagation();
     if (commentText.trim()) {
@@ -206,11 +203,11 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     setReplyToCommentId(null);
   };
 
-  // Ensure author name and image have valid fallbacks
+
   const authorName = userPost?.authorName || 'Anonymous';
   const authorImage = userPost?.authorImage || 'https://cdn-icons-png.flaticon.com/512/4042/4042356.png';
 
-  // Render loading state for auth
+ 
   if (authLoading) {
     return (
       <div className="min-h-[16rem] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-2xl shadow-md p-4 sm:p-6 animate-pulse">
@@ -219,7 +216,7 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     );
   }
 
-  // Render loading state for post
+
   if (isPending) {
     return (
       <div className="min-h-[16rem] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-2xl shadow-md p-4 sm:p-6 animate-pulse">
@@ -228,7 +225,7 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     );
   }
 
-  // Render error state
+
   if (error) {
     return (
       <div className="min-h-[16rem] bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center rounded-2xl shadow-md p-4 sm:p-6">
@@ -237,7 +234,7 @@ const AllUserPost = ({ userPost, isPending, error }) => {
     );
   }
 
-  // Render post if userPost exists
+
   if (!userPost) {
     return (
       <div className="min-h-[16rem] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-2xl shadow-md p-4 sm:p-6">

@@ -64,30 +64,28 @@ const AddPost = () => {
         }
     }, [uid, axiosSecure]);
 
-    // Fetch user subscription status
+
     const { data: userRoleData, isLoading: roleLoading } = useQuery({
         queryKey: ['userSubscription', email],
         queryFn: async () => {
             if (!email) return null;
             const response = await axiosSecure.get(`/users/role/${email}`);
-            console.log('User subscription data:', response.data); // Debug API response
+        
             return response.data;
         },
         enabled: !!email && !authLoading,
     });
 
-    // Handle form input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // Handle tag selection
     const handleTagChange = (selectedOption) => {
         setFormData((prev) => ({ ...prev, tag: selectedOption ? selectedOption.value : '' }));
     };
 
-    // Handle file selection
+
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -96,7 +94,6 @@ const AddPost = () => {
         }
     };
 
-    // Handle crop and upload
     const handleCropAndUpload = async () => {
         if (cropperRef.current) {
             const cropper = cropperRef.current.cropper;
@@ -107,7 +104,7 @@ const AddPost = () => {
                 }
 
                 setUploading(true);
-                setUploadProgress(0); // Reset progress
+                setUploadProgress(0); 
                 setCropModalOpen(false);
 
                 try {
@@ -186,7 +183,7 @@ const AddPost = () => {
                 userId: uid,
                 createdAt: new Date().toISOString(),
             };
-            console.log('Post Data:', postData); // Log data for debugging
+  
             const response = await axiosSecure.post(`/user/post/${uid}`, postData);
             console.log('Server Response:', response.data); // Log response for debugging
             setFormData({

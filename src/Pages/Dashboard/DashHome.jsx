@@ -14,47 +14,47 @@ const DashHome = () => {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState(null);
 
-  // Fetch user membership status
+
   const { data: userData = { subscription: 'free', Badge: 'Bronze' }, isLoading: userLoading } = useQuery({
     queryKey: ['userSubscription', email],
     queryFn: async () => {
       if (!email) return { subscription: 'free', Badge: 'Bronze' };
       const response = await axiosSecure.get(`/users/role/${email}`);
-      console.log('User subscription data:', response.data);
+  
       return response.data;
     },
     enabled: !!email && !authLoading,
   });
 
-  // Fetch post count
+
   const { data: postCount = { count: 0 }, isLoading: postCountLoading } = useQuery({
     queryKey: ['postCount', uid],
     queryFn: async () => {
       if (!uid) return { count: 0 };
       const response = await axiosSecure.get(`/user/post/count/${uid}`);
-      console.log('Post count:', response.data);
+ 
       return response.data;
     },
     enabled: !!uid && !authLoading,
   });
 
-  // Fetch recent posts
+
   const { data: postsData = [], isLoading: postsLoading } = useQuery({
     queryKey: ['userPosts', uid],
     queryFn: async () => {
       if (!uid) return [];
       const response = await axiosSecure.get(`/user/posts/${uid}`);
-      console.log('Recent posts:', response.data);
+
       return response.data.slice(0, 3);
     },
     enabled: !!uid && !authLoading,
   });
 
-  // Invalidate queries after navigation from membership page
+
   useEffect(() => {
     if (window.location.state?.fromMembership) {
       queryClient.invalidateQueries(['userSubscription', email]);
-      console.log('Invalidated userSubscription query after membership upgrade');
+
     }
   }, [email, queryClient]);
 
@@ -64,7 +64,6 @@ const DashHome = () => {
     }
   }, [postsData]);
 
-  // Handle Upgrade button click
   const handleUpgrade = () => {
     navigate('/membership');
   };

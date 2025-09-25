@@ -24,7 +24,7 @@ const FindConnection = () => {
           limit: limit.toString(),
         });
         const response = await axiosSecure.get(`/public-users?${params.toString()}`);
-        console.log('Fetched users:', response.data);
+       
         return response.data;
       } catch (err) {
         console.error('Error fetching users:', err.response?.data || err.message);
@@ -44,7 +44,7 @@ const FindConnection = () => {
     queryFn: async () => {
       try {
         const response = await axiosSecure.get(`/connections/${authUser?.email}`);
-        console.log('Fetched connections:', response.data);
+
         return response.data;
       } catch (err) {
         console.error('Error fetching connections:', err.response?.data || err.message);
@@ -78,7 +78,8 @@ const FindConnection = () => {
       console.error('No authenticated user email');
       return;
     }
-    console.log('Sending connection request:', { fromEmail: authUser.email, toEmail, userName });
+
+
     connectMutation.mutate({ fromEmail: authUser.email, toEmail, userName });
   };
 
@@ -185,7 +186,7 @@ const FindConnection = () => {
               ? 'bg-gray-300 text-gray-600 opacity-50 cursor-not-allowed'
               : 'bg-indigo-600 text-white hover:bg-indigo-700';
 
-            console.log('User check:', { userEmail: user.email, authUserEmail: authUser?.email, isCurrentUser, connectionStatus });
+           
 
             return (
               <div

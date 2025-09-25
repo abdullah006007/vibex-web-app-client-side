@@ -6,24 +6,24 @@ import TagCom from './tags/TagCom';
 
 const MiddleCom = () => {
   const axiosSecure = useAxiosSecure();
-  const [sort, setSort] = useState('newest'); // Default sorting: newest
-  const [page, setPage] = useState(1); // Current page
-  const limit = 10; // Posts per page
+  const [sort, setSort] = useState('newest'); 
+  const [page, setPage] = useState(1); 
+  const limit = 10; 
 
-  // Fetch all posts with sorting and pagination
+  
   const {
     isPending,
     error,
-    data: { posts = [], totalCount = 0 } = {}, // Destructure posts and totalCount
+    data: { posts = [], totalCount = 0 } = {},
     refetch,
   } = useQuery({
     queryKey: ['allUserPosts', sort, page],
     queryFn: async () => {
       try {
-        console.log('Fetching posts with params:', { sort, page, limit });
+     
         const { data } = await axiosSecure.get(`/user/all-post?sort=${sort}&page=${page}&limit=${limit}`);
-        console.log('Posts fetched:', data);
-        return data; // Expecting { posts, totalCount, currentPage, totalPages }
+   
+        return data; 
       } catch (error) {
         console.error('Error fetching posts:', error.response?.data || error.message);
         throw new Error(error.response?.data?.message || 'Failed to fetch posts');
@@ -31,12 +31,11 @@ const MiddleCom = () => {
     },
   });
 
-  // Calculate total pages
-  const totalPages = Math.ceil(totalCount / limit) || 1;
-  console.log('Total pages calculated:', totalPages);
-  console.log('Pagination should render:', totalPages > 1);
 
-  // Handle page navigation
+  const totalPages = Math.ceil(totalCount / limit) || 1;
+
+
+
   const handlePreviousPage = () => {
     if (page > 1) {
       setPage(page - 1);
@@ -56,19 +55,18 @@ const MiddleCom = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Generate pagination buttons with ellipsis
   const getPaginationButtons = () => {
     const buttons = [];
-    const maxButtons = 5; // Show up to 5 page buttons on desktop, 3 on mobile
+    const maxButtons = 5; 
     const maxButtonsMobile = 3;
-    const isMobile = window.innerWidth < 640; // Tailwind's 'sm' breakpoint
+    const isMobile = window.innerWidth < 640; 
     const effectiveMaxButtons = isMobile ? maxButtonsMobile : maxButtons;
     const halfMaxButtons = Math.floor(effectiveMaxButtons / 2);
 
     let startPage = Math.max(1, page - halfMaxButtons);
     let endPage = Math.min(totalPages, startPage + effectiveMaxButtons - 1);
 
-    // Adjust startPage if endPage is at totalPages
+
     if (endPage === totalPages) {
       startPage = Math.max(1, totalPages - effectiveMaxButtons + 1);
     }
@@ -86,7 +84,7 @@ const MiddleCom = () => {
       );
     }
 
-    // Add ellipsis after first page if needed
+
     if (startPage > 2) {
       buttons.push(
         <button key="start-ellipsis" className="join-item btn btn-sm sm:btn-md btn-disabled">
@@ -95,7 +93,7 @@ const MiddleCom = () => {
       );
     }
 
-    // Add page buttons
+
     for (let i = startPage; i <= endPage; i++) {
       buttons.push(
         <button
@@ -108,7 +106,7 @@ const MiddleCom = () => {
       );
     }
 
-    // Add ellipsis before last page if needed
+
     if (endPage < totalPages - 1) {
       buttons.push(
         <button key="end-ellipsis" className="join-item btn btn-sm sm:btn-md btn-disabled">
@@ -117,7 +115,6 @@ const MiddleCom = () => {
       );
     }
 
-    // Add last page
     if (endPage < totalPages) {
       buttons.push(
         <button
@@ -142,7 +139,7 @@ const MiddleCom = () => {
           <button
             onClick={() => {
               setSort('newest');
-              setPage(1); // Reset to first page when changing sort
+              setPage(1); 
             }}
             className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-colors duration-300 ${
               sort === 'newest' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -153,7 +150,7 @@ const MiddleCom = () => {
           <button
             onClick={() => {
               setSort('popular');
-              setPage(1); // Reset to first page when changing sort
+              setPage(1); 
             }}
             className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-colors duration-300 ${
               sort === 'popular' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
