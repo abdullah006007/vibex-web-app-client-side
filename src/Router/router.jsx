@@ -1,152 +1,170 @@
-import { createBrowserRouter } from "react-router";
+// router.jsx
+import { createBrowserRouter } from "react-router-dom";
 import RootLayout from "../Layout/RootLayout";
 import Home from "../Pages/Homepage/Home/Home";
 import AuthLayout from "../Layout/AuthLayout";
 import LogIn from "../Component/Authentication/LogIn";
 import Register from "../Component/Authentication/Register";
 import PrivateRoute from "../Routes/PrivateRoute";
+import AdminRoute from "../Routes/AdminRoute";
 import Dashboard from "../Layout/DashboardLayout";
 import DashHome from "../Pages/Dashboard/DashHome";
-import MyOrder from "../Pages/Dashboard/AddPost";
 import UpdateProfile from "../Pages/UpdareProfile/UpdateProfile";
 import AddPost from "../Pages/Dashboard/AddPost";
 import MyPost from "../Pages/Dashboard/MyPost";
 import AdminProfile from "../Pages/Dashboard/Admin/AdminProfile";
 import ManageUser from "../Pages/Dashboard/Admin/ManageUser";
 import ReportActivity from "../Pages/Dashboard/Admin/ReportActivity";
-import AnounceMent from "../Pages/Dashboard/Admin/Announcement";
-import AdminRoute from "../Routes/AdminRoute";
 import Announcement from "../Pages/Dashboard/Admin/Announcement";
 import PostComments from "../Pages/Dashboard/PostComments";
 import PostDetails from "../Pages/Dashboard/PostDetails";
 import Membership from "../Pages/Merbership/Membership";
 import JoinUs from "../Pages/JoinUs/JoinUs";
 import About from "../Pages/About/About";
+import ErrorElement from "../Pages/UpdareProfile/ErrorElement";
+
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: RootLayout,
+    element: <RootLayout />,
+    errorElement: <ErrorElement />, 
     children: [
       {
         index: true,
-        Component: Home
-      }
-      , {
-        path: 'join-us',
-        Component: JoinUs
-      }
-      , {
-        path: 'about',
-        Component: About
-      }
-      , {
-        path: 'membership',
-        element: <PrivateRoute>
-          <Membership></Membership>
-        </PrivateRoute>
-      }
-    ]
+        element: <Home />,
+      },
+      {
+        path: "join-us",
+        element: <JoinUs />,
+      },
+      {
+        path: "about",
+        element: <About />,
+      },
+      {
+        path: "membership",
+        element: (
+          <PrivateRoute>
+            <Membership />
+          </PrivateRoute>
+        ),
+        errorElement: <ErrorElement />, 
+      },
+    ],
   },
   {
-    path: '/',
-    Component: AuthLayout,
+    path: "/",
+    element: <AuthLayout />,
+    errorElement: <ErrorElement />, 
     children: [
       {
-        path: 'login',
-        Component: LogIn
+        path: "login",
+        element: <LogIn />,
       },
       {
-        path: 'register',
-        Component: Register
-      }
-    ]
+        path: "register",
+        element: <Register />,
+      },
+    ],
   },
   {
-    path: 'dashboard',
-    element: <PrivateRoute>
-      <Dashboard></Dashboard>
-    </PrivateRoute>,
+    path: "dashboard",
+    element: (
+      <PrivateRoute>
+        <Dashboard />
+      </PrivateRoute>
+    ),
+    errorElement: <ErrorElement />, // Catch errors in Dashboard and child routes
     children: [
       {
-        path: 'home',
+        path: "home",
+        element: (
+          <PrivateRoute>
+            <DashHome />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "update-profile",
         element: <PrivateRoute>
-          <DashHome></DashHome>
+          <UpdateProfile />
         </PrivateRoute>
-      }
-      ,
-
-      {
-        path: 'update-profile',
-        Component: UpdateProfile
-      }
-      , {
-        path: 'add-post',
-        Component: AddPost
-      }
-      , {
-        path: 'my-posts',
-        Component: MyPost
-      }
-      ,
-
-
-
-      //admin route
-
-      {
-        path: 'admin-profile',
-        element:
-
-          <AdminRoute>
-            <AdminProfile></AdminProfile>
-          </AdminRoute>
-
+        ,
       },
       {
-        path: 'manage-users',
-        element:
-
-          <AdminRoute>
-            <ManageUser></ManageUser>
-          </AdminRoute>
-
-      },
-      {
-        path: 'reported-activities',
+        path: "add-post",
         element: <PrivateRoute>
-          <AdminRoute>
-            <ReportActivity></ReportActivity>
-          </AdminRoute>
-
-        </PrivateRoute>
-
-
-
+          <AddPost />
+        </PrivateRoute>,
       },
       {
-        path: 'make-announcement',
-        element:
+        path: "my-posts",
+        element: <PrivateRoute>
+          <MyPost />
+        </PrivateRoute>,
+      },
 
+
+      // Admin Routes
+      {
+        path: "admin-profile",
+        element: (
+          <AdminRoute>
+            <AdminProfile />
+          </AdminRoute>
+        ),
+        errorElement: <ErrorElement />, 
+      },
+      {
+        path: "manage-users",
+        element: (
+          <AdminRoute>
+            <ManageUser />
+          </AdminRoute>
+        ),
+        errorElement: <ErrorElement />,
+      },
+      {
+        path: "reported-activities",
+        element: (
           <PrivateRoute>
             <AdminRoute>
-              <Announcement></Announcement>
+              <ReportActivity />
             </AdminRoute>
           </PrivateRoute>
-
+        ),
+        errorElement: <ErrorElement />,
       },
       {
-        path: 'post/:postId/comments',
-        element:
-          <PostComments></PostComments>
+        path: "make-announcement",
+        element: (
+          <PrivateRoute>
+            <AdminRoute>
+              <Announcement />
+            </AdminRoute>
+          </PrivateRoute>
+        ),
+        errorElement: <ErrorElement />,
       },
       {
-        path: 'post/:postId',
-        element:
-          <PostDetails></PostDetails>
-      }
-
-
-    ]
-  }
+        path: "post/:postId/comments",
+        element: <PostComments />,
+        errorElement: <ErrorElement />, // Handle 401 errors in PostComments
+      },
+      {
+        path: "post/:postId",
+        element: <PostDetails />,
+        errorElement: <ErrorElement />,
+      },
+    ],
+  },
+  {
+    path: "/forbidden",
+    element: <ErrorElement error={{ code: "403", message: "Unauthorized access" }} />,
+  },
+  {
+    path: "*",
+    element: <ErrorElement error={{ code: "404", message: "Page not found" }} />,
+  },
 ]);
