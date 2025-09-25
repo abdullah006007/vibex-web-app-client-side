@@ -18,11 +18,11 @@ const Navbar = () => {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showAllAnnouncements, setShowAllAnnouncements] = useState(false);
 
-  // Normalize email to match backend
-  const normalizedEmail = user?.email?.toLowerCase().trim();
-  console.log(`Navbar: User email=${normalizedEmail}, loading=${loading}`);
 
-  // Fetch unread notifications for badge
+  const normalizedEmail = user?.email?.toLowerCase().trim();
+
+
+
   const { data: unreadNotifications = [], isLoading: unreadLoading, error: unreadError } = useQuery({
     queryKey: ['unreadNotifications', normalizedEmail],
     queryFn: async () => {
@@ -30,16 +30,16 @@ const Navbar = () => {
         console.warn('No email provided for unread notifications fetch');
         return [];
       }
-      console.log(`Fetching unread notifications for ${normalizedEmail}`);
+
       const response = await axiosSecure.get(`/notifications/${normalizedEmail}`);
-      console.log(`Fetched ${response.data.length} unread notifications`);
+
       return response.data;
     },
     enabled: !!normalizedEmail && !loading,
     refetchOnWindowFocus: true,
   });
 
-  // Fetch all notifications (read + unread) for "All Announcements" modal
+
   const { data: allNotifications = [], isLoading: allLoading, error: allError } = useQuery({
     queryKey: ['allNotifications', normalizedEmail],
     queryFn: async () => {
@@ -47,23 +47,22 @@ const Navbar = () => {
         console.warn('No email provided for all notifications fetch');
         return [];
       }
-      console.log(`Fetching all notifications for ${normalizedEmail}`);
+ 
       const response = await axiosSecure.get(`/notifications/${normalizedEmail}?all=true`);
-      console.log(`Fetched ${response.data.length} all notifications`);
+    
       return response.data;
     },
     enabled: !!normalizedEmail && !loading,
     refetchOnWindowFocus: true,
   });
 
-  // Mutation to mark single notification as read
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId) => {
-      console.log(`Marking notification ${notificationId} as read`);
+
       return await axiosSecure.patch(`/notifications/${notificationId}/read`);
     },
     onSuccess: () => {
-      console.log('Notification marked as read successfully');
+   
       queryClient.invalidateQueries(['unreadNotifications', normalizedEmail]);
       queryClient.invalidateQueries(['allNotifications', normalizedEmail]);
       toast.success('Notification marked as read', { position: 'top-right' });
@@ -80,11 +79,11 @@ const Navbar = () => {
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
       if (!normalizedEmail) throw new Error('No email');
-      console.log(`Marking all notifications as read for ${normalizedEmail}`);
+
       return await axiosSecure.patch(`/notifications/${normalizedEmail}/read-all`);
     },
     onSuccess: () => {
-      console.log('All notifications marked as read successfully');
+    
       toast.success('All notifications marked as read', { position: 'top-right' });
       queryClient.invalidateQueries(['unreadNotifications', normalizedEmail]);
       queryClient.invalidateQueries(['allNotifications', normalizedEmail]);
@@ -114,7 +113,7 @@ const Navbar = () => {
   }, [unreadError, allError]);
 
   if (loading || unreadLoading || allLoading) {
-    console.log('Rendering spinner due to loading state');
+ 
     return <Spinner />;
   }
 
@@ -128,7 +127,7 @@ const Navbar = () => {
   );
 
   const handleSignOut = () => {
-    console.log(`Logging out user: ${normalizedEmail}`);
+  
     logOut()
       .then(() => {
         toast.success('Logged out successfully', { position: 'top-right' });
@@ -142,17 +141,17 @@ const Navbar = () => {
   };
 
   const toggleDropdown = () => {
-    console.log(`Toggling dropdown: ${!showDropdown}`);
+
     setShowDropdown(!showDropdown);
   };
 
   const handleNotificationClick = () => {
-    console.log('Opening notification modal');
+   
     setShowNotificationModal(true);
   };
 
   const handleMarkAllRead = () => {
-    console.log('Marking all notifications as read');
+  
     markAllAsReadMutation.mutate();
   };
 
