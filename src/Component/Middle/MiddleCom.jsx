@@ -62,7 +62,7 @@ const MiddleCom = () => {
 
   return (
     
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto ">
       <TagCom ></TagCom>
       {/* Sorting Controls */}
       <div className="flex justify-between items-center mb-6">

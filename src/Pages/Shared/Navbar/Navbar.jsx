@@ -123,7 +123,7 @@ const Navbar = () => {
       <li><NavLink to="/" className={({ isActive }) => isActive ? 'text-primary font-semibold' : ''}>Home</NavLink></li>
       <li><NavLink to="/membership" className={({ isActive }) => isActive ? 'text-primary font-semibold' : ''}>Membership</NavLink></li>
       <li><NavLink to="/join-us" className={({ isActive }) => isActive ? 'text-primary font-semibold' : ''}>Join Us</NavLink></li>
-      <li><NavLink to="/about-us" className={({ isActive }) => isActive ? 'text-primary font-semibold' : ''}>About Us</NavLink></li>
+      <li><NavLink to="/about" className={({ isActive }) => isActive ? 'text-primary font-semibold' : ''}>About Us</NavLink></li>
     </>
   );
 

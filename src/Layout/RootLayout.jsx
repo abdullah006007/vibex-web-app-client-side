@@ -12,7 +12,7 @@ const RootLayout = () => {
             
             <Navbar></Navbar>
             <div className='min-h-[calc(100vh-117px)] max-w-7xl mx-auto'>
-                <div className='px-5 '>
+                <div className=''>
                     <Outlet></Outlet>
                 </div>
             </div>

@@ -1,9 +1,7 @@
-// src/Pages/Dashboard/MyPost.js
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import useAuth from '../../Hooks/useAuth';
-
 import { FaComment, FaTrash, FaEye } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import useAxiosSecure from '../../Hooks/useAxiosSecure';
@@ -16,13 +14,13 @@ const MyPost = () => {
   const queryClient = useQueryClient();
 
   // Fetch post count
-  const { data: postCount = 0, isLoading: isLoadingCount, error: countError } = useQuery({
+  const { data: postCount = { count: 0 }, isLoading: isLoadingCount, error: countError } = useQuery({
     queryKey: ['postCount', uid],
     queryFn: async () => {
       if (!uid) throw new Error('User not authenticated');
       const response = await axiosInstance.get(`/user/post/count/${uid}`);
-      console.log(`Fetched post count for user ${uid}: ${response.data.count}`);
-      return response.data.count;
+      console.log(`Fetched post count for user ${uid}:`, response.data);
+      return response.data;
     },
     enabled: !!uid,
   });
@@ -68,20 +66,20 @@ const MyPost = () => {
   // Handle comment navigation
   const handleComment = (postId) => {
     console.log('Navigating to comments for postId:', postId);
-    navigate(`/dashboard/post/${postId}/comments`); // Fixed to match router
+    navigate(`/dashboard/post/${postId}/comments`);
   };
 
   // Handle view post navigation
   const handleViewPost = (postId) => {
     console.log('Navigating to post details for postId:', postId);
-    navigate(`/dashboard/post/${postId}`); // Fixed to match router
+    navigate(`/dashboard/post/${postId}`);
   };
 
   // Render loading state
   if (isLoadingCount || isLoadingPosts) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 flex items-center justify-center">
-        <p className="text-gray-600 text-lg">Loading posts...</p>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="animate-pulse text-indigo-600 text-lg font-bold">Loading posts...</div>
       </div>
     );
   }
@@ -89,7 +87,7 @@ const MyPost = () => {
   // Render error state
   if (countError || postsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
         <div className="max-w-md mx-auto bg-white shadow-xl rounded-lg p-8 text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
           <p className="text-gray-600">
@@ -97,7 +95,7 @@ const MyPost = () => {
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
           >
             Retry
           </button>
@@ -107,18 +105,18 @@ const MyPost = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">My Posts</h1>
         <p className="text-lg text-gray-600 mb-6 text-center">
-          You have created {postCount} {postCount === 1 ? 'post' : 'posts'}.
+          You have created {postCount?.count ?? 0} {postCount?.count === 1 ? 'post' : 'posts'}.
         </p>
         {posts.length === 0 ? (
           <div className="bg-white shadow-xl rounded-lg p-8 text-center">
             <p className="text-gray-600 text-lg">You haven't created any posts yet.</p>
             <button
               onClick={() => navigate('/dashboard/add-post')}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
             >
               Create a Post
             </button>
@@ -126,7 +124,7 @@ const MyPost = () => {
         ) : (
           <div className="bg-white shadow-xl rounded-lg overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-indigo-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Post Title
@@ -164,14 +162,14 @@ const MyPost = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-4">
                       <button
                         onClick={() => handleViewPost(post._id)}
-                        className="text-green-600 hover:text-green-800 flex items-center"
+                        className="text-indigo-600 hover:text-indigo-800 flex items-center"
                         title="View Post"
                       >
                         <FaEye className="mr-1" /> View
                       </button>
                       <button
                         onClick={() => handleComment(post._id)}
-                        className="text-blue-600 hover:text-blue-800 flex items-center"
+                        className="text-indigo-600 hover:text-indigo-800 flex items-center"
                         title="View Comments"
                       >
                         <FaComment className="mr-1" /> Comment

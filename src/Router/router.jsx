@@ -21,6 +21,7 @@ import PostComments from "../Pages/Dashboard/PostComments";
 import PostDetails from "../Pages/Dashboard/PostDetails";
 import Membership from "../Pages/Merbership/Membership";
 import JoinUs from "../Pages/JoinUs/JoinUs";
+import About from "../Pages/About/About";
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
         ,{
           path: 'join-us',
           Component : JoinUs
+        }
+        ,{
+          path: 'about',
+          Component : About
         }
         ,{
           path: 'membership',
@@ -65,7 +70,9 @@ export const router = createBrowserRouter([
     children: [
       {
         path:'home',
-        Component: DashHome
+        element: <PrivateRoute>
+          <DashHome></DashHome>
+        </PrivateRoute>
       }
       ,
       

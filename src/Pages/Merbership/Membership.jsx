@@ -160,12 +160,22 @@ const Membership = () => {
   });
 
   // Fetch user post count
+  // Fix the postCount query function
   const { data: postCount, isLoading: postCountLoading } = useQuery({
     queryKey: ['postCount', user?.uid],
     queryFn: async () => {
       if (!user) return 0;
       const response = await axiosSecure.get(`/user/post/count/${user.uid}`);
-      return response.data.count;
+
+      // Add proper handling for the response
+      console.log('Post count API response:', response.data); // Debug what you're getting
+
+      // If response.data is {count: 5}, extract the count
+      if (response.data && typeof response.data === 'object' && response.data.count !== undefined) {
+        return response.data;; // This returns the number, not the object
+      }
+
+      return 0; // Fallback
     },
     enabled: !!user && !authLoading,
   });
@@ -219,7 +229,7 @@ const Membership = () => {
           <>
             <div className="bg-blue-50 p-4 rounded-lg mb-6 shadow-inner">
               <p className="text-gray-700 font-semibold flex items-center justify-center">
-                <FaCheckCircle className="mr-2 text-blue-500" /> Current Posts: {postCount || 0}/5
+                <FaCheckCircle className="mr-2 text-blue-500" /> Current Posts: {postCount?.count || 0}/5
                 <span className="text-gray-500 ml-2">(Upgrade to Premium for unlimited!)</span>
               </p>
             </div>
