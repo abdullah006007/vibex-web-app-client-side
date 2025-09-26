@@ -10,7 +10,7 @@ const DashboardLayout = () => {
 
   const { user } = useAuth()
   const { role, roleLoading } = useRole()
-console.log(role);
+  console.log(role);
 
 
 
@@ -58,71 +58,61 @@ console.log(role);
           {/* navigation link */}
 
 
-         {
-          !roleLoading && role === 'user' && 
-          <>
-           <NavLink
-            to="/dashboard/home"
-            className={({ isActive }) =>
-              `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'}`
-            }
-          >
-            <AiFillHome className="text-lg" />
-            <span>My Profile</span>
-          </NavLink>
+          {
+            !roleLoading && role === 'user' &&
+            <>
+              <NavLink
+                to="/dashboard/home"
+                className={({ isActive }) =>
+                  `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'}`
+                }
+              >
+                <AiFillHome className="text-lg" />
+                <span>My Profile</span>
+              </NavLink>
 
 
-          <NavLink
-            to="/dashboard/add-post"
-            className={({ isActive }) =>
-              `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'
-              }`
-            }
-          >
-            <AiOutlinePlusCircle className="text-lg" />
-            <span>Add Post</span>
-          </NavLink>
+              <NavLink
+                to="/dashboard/add-post"
+                className={({ isActive }) =>
+                  `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'
+                  }`
+                }
+              >
+                <AiOutlinePlusCircle className="text-lg" />
+                <span>Add Post</span>
+              </NavLink>
 
 
-          <NavLink
-            to="/dashboard/my-posts"
-            className={({ isActive }) =>
-              `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'
-              }`
-            }
-          >
-            <AiOutlineFileText className="text-lg" />
-            <span>My Posts</span>
-          </NavLink>
-
-
-
-          <NavLink
-            to="/dashboard/update-profile"
-            className={({ isActive }) =>
-              `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'
-              }`
-            }
-          >
-            <AiOutlineUser className="text-lg" />
-            <span>Update Profile</span>
-          </NavLink>
-          
-          </>
-         }
+              <NavLink
+                to="/dashboard/my-posts"
+                className={({ isActive }) =>
+                  `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'
+                  }`
+                }
+              >
+                <AiOutlineFileText className="text-lg" />
+                <span>My Posts</span>
+              </NavLink>
 
 
 
-         <NavLink
-            to="/dashboard/update-profile"
-            className={({ isActive }) =>
-              `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'
-              }`
-            }
-          >
-            <AiOutlineUser className="text-lg" />
-            <span>Update Profile</span>
-          </NavLink>
+              <NavLink
+                to="/dashboard/update-profile"
+                className={({ isActive }) =>
+                  `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'
+                  }`
+                }
+              >
+                <AiOutlineUser className="text-lg" />
+                <span>Update Profile</span>
+              </NavLink>
+
+            </>
+          }
+
+
+
 
 
 
@@ -137,6 +127,17 @@ console.log(role);
             !roleLoading && role === 'admin' &&
 
             <>
+              <NavLink
+                to="/dashboard/update-profile"
+                className={({ isActive }) =>
+                  `flex items-center gap-2 p-2 rounded-lg ${isActive ? 'bg-primary text-white' : 'hover:bg-base-300'
+                  }`
+                }
+              >
+                <AiOutlineUser className="text-lg" />
+                <span>Update Profile</span>
+              </NavLink>
+
 
 
               <NavLink
